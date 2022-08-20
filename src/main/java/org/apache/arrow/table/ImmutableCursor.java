@@ -2,7 +2,9 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.VarCharVector;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -48,7 +50,7 @@ public class ImmutableCursor implements Iterator<ImmutableCursor> {
     }
 
     /**
-     * Returns an int from this MutableCursor at the column of the given name. An IllegalStateException is
+     * Returns an int from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
      * has a different type
      */
@@ -58,8 +60,8 @@ public class ImmutableCursor implements Iterator<ImmutableCursor> {
     }
 
     /**
-     * Returns an int from this MutableCursor at the column with the given index. An IllegalStateException is
-     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * Returns an int from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present and an IllegalArgumentException is thrown if it
      * has a different type
      */
     public int getInt(int columnIndex) {
@@ -68,7 +70,34 @@ public class ImmutableCursor implements Iterator<ImmutableCursor> {
     }
 
     /**
-     * Returns true if there is at least one more non-deleted row in the table
+     * Returns a String from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     *
+     * StandardCharsets.UTF_8 is used for the conversion to a string
+     * TODO: Handle other charsets, maybe set in constructor, along with methods with explicit argument
+     */
+    public String getString(String columnName) {
+        VarCharVector vector = (VarCharVector) table.getVector(columnName);
+
+        return new String(vector.get(rowNumber), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Returns a String from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     *
+     * StandardCharsets.UTF_8 is used for the conversion to a string
+     * TODO: Handle other charsets, maybe set in constructor, along with methods with explicit argument
+     */
+    public String getVarChar(int columnIndex) {
+        VarCharVector vector = (VarCharVector) table.getVector(columnIndex);
+        return new String(vector.get(rowNumber), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Returns true if there is at least one more non-deleted row in the table that has yet to be processed
      */
     @Override
     public boolean hasNext() {
@@ -106,7 +135,12 @@ public class ImmutableCursor implements Iterator<ImmutableCursor> {
     }
 
     /**
-     * Returns new internal iterator that processes every row, deleted or not
+     * TODO: When used with an ImmutableTable there would be no deleted rows, so this method could be used, but
+     *   the deletion support is needed when it's needed as an immutable iterator for MutableTable.
+     *
+     * Returns new internal iterator that processes every row, deleted or not.
+     * Users should use the wrapping next() and hasNext() methods rather than using this iterator directly,
+     * unless you want to see any deleted rows.
      */
     private Iterator<Integer> intIterator() {
         return new Iterator<>() {

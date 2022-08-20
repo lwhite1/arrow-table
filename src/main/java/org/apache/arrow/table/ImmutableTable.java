@@ -39,7 +39,7 @@ public class ImmutableTable extends BaseTable implements Iterable<ImmutableCurso
     /**
      * Constructs a new instance containing the data from the argument.
      *
-     * @param vsr  The VectorSchemaRoot providing data for this MutableTable
+     * @param vsr  The VectorSchemaRoot providing data for this ImmutableTable
      */
     public ImmutableTable(VectorSchemaRoot vsr) {
         this(vsr.getSchema(), vsr.getFieldVectors(), vsr.getRowCount());
@@ -122,7 +122,7 @@ public class ImmutableTable extends BaseTable implements Iterable<ImmutableCurso
     }
 
     /**
-     * Returns a new Dataframe created by adding the given vector to the vectors in this Table.
+     * Returns a new Table created by adding the given vector to the vectors in this Table.
      *
      * @param index  field index
      * @param vector vector to be added.

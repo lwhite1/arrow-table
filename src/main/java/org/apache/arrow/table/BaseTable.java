@@ -15,10 +15,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Abstract base class for Table with mutable and immutable concrete implementations
+ */
 public abstract class BaseTable implements AutoCloseable {
+
     protected final List<FieldVector> fieldVectors;
+
     protected final Map<Field, FieldVector> fieldVectorsMap = new LinkedHashMap<>();
+
     protected Schema schema;
+
     /**
      * The number of rows of data in the table; not necessarily the same as the table row capacity
      */
@@ -193,7 +200,7 @@ public abstract class BaseTable implements AutoCloseable {
     /**
      * Slice this table from desired index.
      * @param index start position of the slice
-     * @return the sliced root
+     * @return the sliced table
      */
     public BaseTable slice(int index) {
         return slice(index, this.rowCount - index);
@@ -203,7 +210,7 @@ public abstract class BaseTable implements AutoCloseable {
      * Slice this table at desired index and length.
      * @param index start position of the slice
      * @param length length of the slice
-     * @return the sliced root
+     * @return the sliced table
      */
     public BaseTable slice(int index, int length) {
         Preconditions.checkArgument(index >= 0, "expecting non-negative index");

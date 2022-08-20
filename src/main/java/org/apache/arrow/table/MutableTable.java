@@ -111,7 +111,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
     /**
      * Returns a copy of this table, with all deleted rows removed
      *
-     * @return a new frame with no empty rows among the data
+     * @return a new table with no empty rows among the data
      */
     public MutableTable compact() {
         MutableTable compacted = null;
@@ -122,7 +122,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
     }
 
     /**
-     * Release all the memory for each vector held in this dataframe. This DOES NOT remove vectors from the container.
+     * Release all the memory for each vector held in this table. This DOES NOT remove vectors from the container.
      */
     public void clear() {
         for (FieldVector v : fieldVectors) {
@@ -136,7 +136,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      *
      * @param index  field index
      * @param vector vector to be added.
-     * @return out Dataframe with vector added
+     * @return out a copy of this Table with vector added
      */
     public MutableTable addVector(int index, FieldVector vector) {
         return new MutableTable(insertVector(index, vector));
@@ -146,7 +146,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      * Returns a new Table created by removing the selected Vector from this Table.
      *
      * @param index field index
-     * @return out Table with vector removed
+     * @return out a copy of this Table with vector removed
      */
     public MutableTable removeVector(int index) {
         return new MutableTable(extractVector(index));
@@ -214,6 +214,10 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
         return new MutableCursor(this);
     }
 
+    /**
+     * Returns a cursor with only 'get' operations. Use a MutableCursor if you need to update the data
+     * @return  a new ImmutableCursor for this table
+     */
     public ImmutableCursor immutableCursor() {
         return new ImmutableCursor(this);
     }
@@ -221,7 +225,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
     /**
      * Slice this table from desired index.
      * @param index start position of the slice
-     * @return the sliced root
+     * @return the sliced table
      */
     @Override
     public MutableTable slice(int index) {
@@ -232,7 +236,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      * Slice this table at desired index and length.
      * @param index start position of the slice
      * @param length length of the slice
-     * @return the sliced root
+     * @return the sliced table
      */
     @Override
     public MutableTable slice(int index, int length) {

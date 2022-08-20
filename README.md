@@ -31,6 +31,19 @@ you ask the table:
 ```java
 MutableCursor c = table.mutableCursor();
 ```
+MutableCursor also implements the public API for ImmutableCursor, so the accessor methods are available. For example:
+
+```java
+MutableCursor c = table.mutableCursor();
+while (c.hasNext()){
+    if(c.getInt("age") >= 18) {
+        c.setNull("chaparone")
+            .setVarChar("status", "adult");
+    }
+}
+```
+
+
 ## Mutability semantics
 In contrast to VectorSchemaRoot, Table's mutability semantics are straightforward. You can:
 - append records
