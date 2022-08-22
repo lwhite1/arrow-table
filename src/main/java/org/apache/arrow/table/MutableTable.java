@@ -152,6 +152,22 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
         return new MutableTable(extractVector(index));
     }
 
+
+    /**
+     * Returns a ImmutableTable from the data in this table
+     * // TODO: Implement
+     * @return a new ImmutableTable
+     */
+    @Override
+    public ImmutableTable toImmutableTable() {
+        return null;
+    }
+
+    @Override
+    public MutableTable toMutableTable() {
+        return this;
+    }
+
     @Override
     public void close() {
         try {

@@ -18,13 +18,17 @@ public class MutableCursor extends ImmutableCursor {
         super(table);
     }
 
+    /**
+     * Returns the table that backs this cursor
+     */
     private MutableTable getTable() {
         return (MutableTable) table;
     }
 
     /**
      * Moves this MutableCursor to the given 0-based row index
-     * @return this Cursor for chaining
+     * TODO: Determine the best way to handle case where the row requested has been deleted.
+     * @return this Cursor for method chaining
      **/
     public MutableCursor at(int rowNumber) {
         super.at(rowNumber);
@@ -32,9 +36,14 @@ public class MutableCursor extends ImmutableCursor {
 
     }
 
+    /**
+     * Sets a null value in the named vector at the current row.
+     * @param columnName    The name of the column to update
+     * @return  this Cursor for method chaining
+     */
     public MutableCursor setNull(String columnName) {
         FieldVector v = table.getVector(columnName);
-        // TODO: Real implementation after fixing setNull issue
+        // TODO: Real implementation without casts after fixing setNull issue
         if (v instanceof IntVector) {
             ((IntVector) v).setNull(getRowNumber());
         }
@@ -42,8 +51,8 @@ public class MutableCursor extends ImmutableCursor {
     }
 
     /**
-     * Mark the current row as deleted
-     *
+     * Marks the current row as deleted.
+     * TODO: should we add an un-delete method. See issue with at()
      * @return this row for chaining
      */
     public MutableCursor delete() {
@@ -77,5 +86,14 @@ public class MutableCursor extends ImmutableCursor {
         IntVector v = (IntVector) table.getVector(columnName);
         v.set(getRowNumber(), value);
         return this;
+    }
+
+    /**
+     * Copies the data at {@code rowIdx} to the end of the table
+     * TODO: Implement
+     * @param rowIdx    the index or row number of the row to copy
+     */
+    private void copyRow(int rowIdx) {
+
     }
 }

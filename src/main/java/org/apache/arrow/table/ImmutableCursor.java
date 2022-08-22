@@ -4,6 +4,7 @@ import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VarCharVector;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -27,11 +28,27 @@ public class ImmutableCursor implements Iterator<ImmutableCursor> {
     private final Iterator<Integer> iterator = intIterator();
 
     /**
-     * Constructs a new MutableCursor backed by the given table
+     * Returns the standard character set to use for decoding strings. Can be overridden for individual columns
+     * by providing the CharSet as an argument in the getter
+     */
+    private Charset standardCharacterSet = StandardCharsets.UTF_8;
+
+    /**
+     * Constructs a new MutableCursor backed by the given table.
      * @param table the table that this MutableCursor object represents
      */
     public ImmutableCursor(BaseTable table) {
         this.table = table;
+    }
+
+    /**
+     * Constructs a new MutableCursor backed by the given table
+     * @param table     the table that this MutableCursor object represents
+     * @param charset   the standard charset for decoding bytes into strings. This can be set for individual columns
+     */
+    public ImmutableCursor(BaseTable table, Charset charset) {
+        this.table = table;
+        this.standardCharacterSet = charset;
     }
 
     /**
@@ -74,26 +91,41 @@ public class ImmutableCursor implements Iterator<ImmutableCursor> {
      * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
      * has a different type
      *
-     * StandardCharsets.UTF_8 is used for the conversion to a string
-     * TODO: Handle other charsets, maybe set in constructor, along with methods with explicit argument
+     * StandardCharsets.UTF_8 is used as the charset
      */
-    public String getString(String columnName) {
+    public String getVarChar(String columnName) {
         VarCharVector vector = (VarCharVector) table.getVector(columnName);
 
-        return new String(vector.get(rowNumber), StandardCharsets.UTF_8);
+        return new String(vector.get(rowNumber), standardCharacterSet);
+    }
+
+    /**
+     * Returns a String from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     *
+     * @param vectorName    the name of the FieldVector holding the value
+     * @param charset       the charset to use for decoding the bytes
+     */
+    public String getVarChar(String vectorName, Charset charset) {
+        VarCharVector vector = (VarCharVector) table.getVector(vectorName);
+
+        return new String(vector.get(rowNumber), charset);
     }
 
     /**
      * Returns a String from the column with the given index at the current row. An IllegalStateException is
      * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
      * has a different type
-     *
-     * StandardCharsets.UTF_8 is used for the conversion to a string
-     * TODO: Handle other charsets, maybe set in constructor, along with methods with explicit argument
      */
     public String getVarChar(int columnIndex) {
         VarCharVector vector = (VarCharVector) table.getVector(columnIndex);
-        return new String(vector.get(rowNumber), StandardCharsets.UTF_8);
+        return new String(vector.get(rowNumber), standardCharacterSet);
+    }
+
+    public String getVarChar(int columnIndex, Charset charset) {
+        VarCharVector vector = (VarCharVector) table.getVector(columnIndex);
+        return new String(vector.get(rowNumber), charset);
     }
 
     /**

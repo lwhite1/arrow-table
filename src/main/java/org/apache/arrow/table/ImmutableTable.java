@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * ImmutableTable is an immutable tabular data structure.
+ * ImmutableTable is an immutable, tabular data structure.
  *
  * See {@link MutableTable} for a mutable version.
  * See {@link VectorSchemaRoot} for batch processing use cases
@@ -163,5 +163,20 @@ public class ImmutableTable extends BaseTable implements Iterable<ImmutableCurso
                 return row.hasNext();
             }
         };
+    }
+
+    @Override
+    public ImmutableTable toImmutableTable() {
+        return this;
+    }
+
+    /**
+     * Returns a MutableTable from the data in this table
+     * // TODO: Implement
+     * @return a new MutableTable
+     */
+    @Override
+    public MutableTable toMutableTable() {
+        return null;
     }
 }

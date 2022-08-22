@@ -31,6 +31,12 @@ public abstract class BaseTable implements AutoCloseable {
      */
     protected int rowCount;
 
+    /**
+     *
+     * @param schema
+     * @param rowCount
+     * @param fieldVectors
+     */
     public BaseTable(Schema schema, int rowCount, List<FieldVector> fieldVectors) {
         this.schema = schema;
         this.rowCount = rowCount;
@@ -48,6 +54,11 @@ public abstract class BaseTable implements AutoCloseable {
         rowCount = 0;
     }
 
+    /**
+     * Returns a FieldReader for the vector with the given name
+     * @param name  The name of a vector in this Table (case-sensitive)
+     * @return      A FieldReader for the named FieldVector
+     */
     public FieldReader getReader(String name) {
         for (Map.Entry<Field, FieldVector> entry : fieldVectorsMap.entrySet()) {
             if (entry.getKey().getName().equals(name)) {
@@ -57,6 +68,11 @@ public abstract class BaseTable implements AutoCloseable {
         return null;
     }
 
+    /**
+     * Returns a FieldReader for the given field
+     * @param field The field to be read
+     * @return      A FieldReader for the given field
+     */
     public FieldReader getReader(Field field) {
         return fieldVectorsMap.get(field).getReader();
     }
@@ -65,6 +81,16 @@ public abstract class BaseTable implements AutoCloseable {
         Preconditions.checkArgument(index >= 0 && index < fieldVectors.size());
         return fieldVectors.get(index).getReader();
     }
+
+    /**
+     * Returns this table if it is Immutable; otherwise returns a new Immutable table from the data in this table
+     */
+    public abstract ImmutableTable toImmutableTable();
+
+    /**
+     * Returns this table if it is already Mutable; otherwise returns a new Mutable table from the data in this table
+     */
+    public abstract MutableTable toMutableTable();
 
     public Schema getSchema() {
         return schema;
