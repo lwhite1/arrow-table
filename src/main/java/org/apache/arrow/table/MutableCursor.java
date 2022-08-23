@@ -2,6 +2,9 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.VarCharVector;
+
+import java.nio.charset.Charset;
 
 /**
  * MutableCursor is a positionable, mutable cursor backed by a {@link MutableTable}.
@@ -19,6 +22,15 @@ public class MutableCursor extends ImmutableCursor {
     }
 
     /**
+     * Constructs a new MutableCursor backed by the given table
+     * @param table the table that this MutableCursor object represents
+     * @param charset the default charset for encoding/decoding strings
+     */
+    public MutableCursor(MutableTable table, Charset charset) {
+        super(table, charset);
+    }
+
+    /**
      * Returns the table that backs this cursor
      */
     private MutableTable getTable() {
@@ -33,7 +45,6 @@ public class MutableCursor extends ImmutableCursor {
     public MutableCursor at(int rowNumber) {
         super.at(rowNumber);
         return this;
-
     }
 
     /**
@@ -85,6 +96,34 @@ public class MutableCursor extends ImmutableCursor {
     public MutableCursor setInt(String columnName, int value) {
         IntVector v = (IntVector) table.getVector(columnName);
         v.set(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is * thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setVarChar(int columnIndex, String value) {
+        VarCharVector v = (VarCharVector) table.getVector(columnIndex);
+        v.set(getRowNumber(), value.getBytes(getDefaultCharacterSet()));
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is * thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setVarChar(String columnName, String value) {
+        VarCharVector v = (VarCharVector) table.getVector(columnName);
+        v.set(getRowNumber(), value.getBytes(getDefaultCharacterSet()));
         return this;
     }
 

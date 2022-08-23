@@ -5,7 +5,6 @@ import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VarCharVector;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -13,42 +12,37 @@ import java.util.NoSuchElementException;
  * MutableCursor is a positionable, immutable cursor backed by a {@link MutableTable}.
  * If a row in a table is marked as deleted, it is skipped when iterating.
  */
-public class ImmutableCursor implements Iterator<ImmutableCursor> {
-
-    /** The table we're enumerating */
-    protected final BaseTable table;
+public class ImmutableCursor extends BaseCursor implements Iterator<ImmutableCursor> {
 
     /** the current row number */
     private int rowNumber = -1;
 
-    /** Indicates whether the next non-deleted row has been calculated yet */
+    /** Indicates whether the next non-deleted row has been determined yet */
     private boolean nextRowSet;
 
-    /** An iterator that returns every row, deleted or not. We wrap it to get only the non-deleted ones */
+    /**
+     * An iterator that returns every row in the table, deleted or not. The implemented next() and hasNext() methods
+     * in ImmutableCursor wrap it with a filter to get only the non-deleted ones
+     **/
     private final Iterator<Integer> iterator = intIterator();
 
-    /**
-     * Returns the standard character set to use for decoding strings. Can be overridden for individual columns
-     * by providing the CharSet as an argument in the getter
-     */
-    private Charset standardCharacterSet = StandardCharsets.UTF_8;
 
     /**
-     * Constructs a new MutableCursor backed by the given table.
-     * @param table the table that this MutableCursor object represents
+     * Constructs a new BaseCursor backed by the given table.
+     * @param table the table that this ImmutableCursor object represents
      */
     public ImmutableCursor(BaseTable table) {
-        this.table = table;
+        super(table);
     }
 
     /**
      * Constructs a new MutableCursor backed by the given table
-     * @param table     the table that this MutableCursor object represents
-     * @param charset   the standard charset for decoding bytes into strings. This can be set for individual columns
+     * @param table     the table that this ImmutableCursor object represents
+     * @param charset   the standard charset for decoding bytes into strings. Note: This can be overridden for
+     *                  individual columns
      */
     public ImmutableCursor(BaseTable table, Charset charset) {
-        this.table = table;
-        this.standardCharacterSet = charset;
+        super(table, charset);
     }
 
     /**
@@ -96,7 +90,7 @@ public class ImmutableCursor implements Iterator<ImmutableCursor> {
     public String getVarChar(String columnName) {
         VarCharVector vector = (VarCharVector) table.getVector(columnName);
 
-        return new String(vector.get(rowNumber), standardCharacterSet);
+        return new String(vector.get(rowNumber), getDefaultCharacterSet());
     }
 
     /**
@@ -120,7 +114,7 @@ public class ImmutableCursor implements Iterator<ImmutableCursor> {
      */
     public String getVarChar(int columnIndex) {
         VarCharVector vector = (VarCharVector) table.getVector(columnIndex);
-        return new String(vector.get(rowNumber), standardCharacterSet);
+        return new String(vector.get(rowNumber), getDefaultCharacterSet());
     }
 
     public String getVarChar(int columnIndex, Charset charset) {
