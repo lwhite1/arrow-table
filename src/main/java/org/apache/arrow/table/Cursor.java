@@ -12,7 +12,7 @@ import java.util.NoSuchElementException;
  * MutableCursor is a positionable, immutable cursor backed by a {@link MutableTable}.
  * If a row in a table is marked as deleted, it is skipped when iterating.
  */
-public class ImmutableCursor extends BaseCursor implements Iterator<ImmutableCursor> {
+public class Cursor extends BaseCursor implements Iterator<Cursor> {
 
     /** the current row number */
     private int rowNumber = -1;
@@ -22,26 +22,26 @@ public class ImmutableCursor extends BaseCursor implements Iterator<ImmutableCur
 
     /**
      * An iterator that returns every row in the table, deleted or not. The implemented next() and hasNext() methods
-     * in ImmutableCursor wrap it with a filter to get only the non-deleted ones
+     * in Cursor wrap it with a filter to get only the non-deleted ones
      **/
     private final Iterator<Integer> iterator = intIterator();
 
 
     /**
      * Constructs a new BaseCursor backed by the given table.
-     * @param table the table that this ImmutableCursor object represents
+     * @param table the table that this Cursor object represents
      */
-    public ImmutableCursor(BaseTable table) {
+    public Cursor(BaseTable table) {
         super(table);
     }
 
     /**
      * Constructs a new MutableCursor backed by the given table
-     * @param table     the table that this ImmutableCursor object represents
+     * @param table     the table that this Cursor object represents
      * @param charset   the standard charset for decoding bytes into strings. Note: This can be overridden for
      *                  individual columns
      */
-    public ImmutableCursor(BaseTable table, Charset charset) {
+    public Cursor(BaseTable table, Charset charset) {
         super(table, charset);
     }
 
@@ -49,7 +49,7 @@ public class ImmutableCursor extends BaseCursor implements Iterator<ImmutableCur
      * Moves this MutableCursor to the given 0-based row index
      * @return this Cursor for chaining
      **/
-    public ImmutableCursor at(int rowNumber) {
+    public Cursor at(int rowNumber) {
         this.rowNumber = rowNumber;
         return this;
     }
@@ -136,7 +136,7 @@ public class ImmutableCursor extends BaseCursor implements Iterator<ImmutableCur
      * @throws NoSuchElementException if there are no more rows
      */
     @Override
-    public ImmutableCursor next() {
+    public Cursor next() {
         if (!nextRowSet && !setNextObject()) {
             throw new NoSuchElementException();
         }
@@ -161,7 +161,7 @@ public class ImmutableCursor extends BaseCursor implements Iterator<ImmutableCur
     }
 
     /**
-     * TODO: When used with an ImmutableTable there would be no deleted rows, so this method could be used, but
+     * TODO: When used with an Table there would be no deleted rows, so this method could be used, but
      *   the deletion support is needed when it's needed as an immutable iterator for MutableTable.
      *
      * Returns new internal iterator that processes every row, deleted or not.

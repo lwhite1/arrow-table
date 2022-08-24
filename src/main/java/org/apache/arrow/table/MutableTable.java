@@ -11,6 +11,7 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.TransferPair;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -73,7 +74,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      * @param rowCount     The number of rows contained.
      */
     public MutableTable(List<Field> fields, List<FieldVector> fieldVectors, int rowCount) {
-        this(new org.apache.arrow.vector.types.pojo.Schema(fields), fieldVectors, rowCount);
+        this(new Schema(fields), fieldVectors, rowCount);
     }
 
     /**
@@ -85,6 +86,19 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      */
     public MutableTable(Schema schema, List<FieldVector> fieldVectors, int rowCount) {
         super(schema, rowCount, fieldVectors);
+    }
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param schema                The schema for the vectors.
+     * @param fieldVectors          The data vectors.
+     * @param rowCount              The number of rows
+     * @param dictionaryProvider    The dictionary provider containing the dictionaries for any encoded column
+     */
+    public MutableTable(Schema schema, List<FieldVector> fieldVectors, int rowCount, DictionaryProvider dictionaryProvider) {
+        super(schema, rowCount, fieldVectors);
+        this.dictionaryProvider = dictionaryProvider;
     }
 
     /**
@@ -156,12 +170,12 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
 
 
     /**
-     * Returns a ImmutableTable from the data in this table
+     * Returns a Table from the data in this table
      * // TODO: Implement
-     * @return a new ImmutableTable
+     * @return a new Table
      */
     @Override
-    public ImmutableTable toImmutableTable() {
+    public Table toImmutableTable() {
         return null;
     }
 
@@ -237,10 +251,10 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
 
     /**
      * Returns a cursor with only 'get' operations. Use a MutableCursor if you need to update the data
-     * @return  a new ImmutableCursor for this table
+     * @return  a new Cursor for this table
      */
-    public ImmutableCursor immutableCursor() {
-        return new ImmutableCursor(this);
+    public Cursor immutableCursor() {
+        return new Cursor(this);
     }
 
     /**
@@ -294,5 +308,14 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
             return true;
         }
         return deletedRows.contains(rowNumber);
+    }
+
+    /**
+     * Returns the dictionaryProvider associated with this table, if any
+     * @return a DictionaryProvider or null
+     */
+    @Nullable
+    public DictionaryProvider getDictionaryProvider() {
+        return dictionaryProvider;
     }
 }

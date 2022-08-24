@@ -88,7 +88,7 @@ public abstract class BaseTable implements AutoCloseable {
     /**
      * Returns this table if it is Immutable; otherwise returns a new Immutable table from the data in this table
      */
-    public abstract ImmutableTable toImmutableTable();
+    public abstract Table toImmutableTable();
 
     /**
      * Returns this table if it is already Mutable; otherwise returns a new Mutable table from the data in this table
@@ -193,8 +193,8 @@ public abstract class BaseTable implements AutoCloseable {
         return fieldVectors.get(columnIndex);
     }
 
-    public ImmutableCursor immutableCursor() {
-        return new ImmutableCursor(this);
+    public Cursor immutableCursor() {
+        return new Cursor(this);
     }
 
     /**
@@ -267,7 +267,7 @@ public abstract class BaseTable implements AutoCloseable {
             return (FieldVector) transferPair.getTo();
         }).collect(Collectors.toList());
 
-        return new ImmutableTable(sliceVectors);
+        return new Table(sliceVectors);
     }
 
     /**

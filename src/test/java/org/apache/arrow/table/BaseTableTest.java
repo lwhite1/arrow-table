@@ -83,7 +83,7 @@ class BaseTableTest {
         List<FieldVector> vectors = new ArrayList<>();
         vectors.add(v);
         v.setValueCount(1);
-        try (ImmutableTable t = new ImmutableTable(vectors)) {
+        try (Table t = new Table(vectors)) {
             t.close();
             for (FieldVector fieldVector: t.fieldVectors) {
                 assertEquals(0, fieldVector.getValueCount());
@@ -96,8 +96,8 @@ class BaseTableTest {
         IntVector v = new IntVector(INT_VECTOR_NAME, allocator);
         v.setSafe(0, 132);
 
-        try (ImmutableTable t = new ImmutableTable(List.of(v))) {
-            // TODO: handle setting rowcount on ImmutableTable construction
+        try (Table t = new Table(List.of(v))) {
+            // TODO: handle setting rowcount on Table construction
             assertEquals(1, t.getRowCount());
         }
     }
@@ -108,21 +108,21 @@ class BaseTableTest {
 
     @Test
     void getVector() {
-        try (ImmutableTable t = ImmutableTable.create(schema1, allocator)) {
+        try (Table t = Table.create(schema1, allocator)) {
             assertNotNull(t.getVector(0));
         }
     }
 
     @Test
     void testGetVector() {
-        try (ImmutableTable t = ImmutableTable.create(schema1, allocator)) {
+        try (Table t = Table.create(schema1, allocator)) {
             assertNotNull(t.getVector(INT_VECTOR_NAME));
         }
     }
 
     @Test
     void immutableCursor() {
-        try (ImmutableTable t = ImmutableTable.create(schema1, allocator)) {
+        try (Table t = Table.create(schema1, allocator)) {
             assertNotNull(t.immutableCursor());
         }
     }
