@@ -32,15 +32,18 @@ public abstract class BaseTable implements AutoCloseable {
     protected int rowCount;
 
     /**
-     *
-     * @param schema
-     * @param rowCount
-     * @param fieldVectors
+     * Constructs new instance with the given rowCount, and containing the schema and each of the given vectors.
+     * @param schema        the schema for this Table
+     * @param rowCount      the number of rows in the table
+     * @param fieldVectors  the FieldVectors containing the table's data
      */
     public BaseTable(Schema schema, int rowCount, List<FieldVector> fieldVectors) {
         this.schema = schema;
         this.rowCount = rowCount;
         this.fieldVectors = fieldVectors;
+        for (FieldVector v : fieldVectors) {
+            fieldVectorsMap.put(v.getField(), v);
+        }
     }
 
     /**
@@ -94,6 +97,16 @@ public abstract class BaseTable implements AutoCloseable {
 
     public Schema getSchema() {
         return schema;
+    }
+
+    /**
+     * Returns the Field with the given name if one exists in this table
+     * @param fieldName the name of the field to return
+     * @return          a field with the given name if one is present
+     * @throws IllegalArgumentException – if the field was not found
+     */
+    public Field getField(String fieldName) {
+        return getSchema().findField(fieldName);
     }
 
     /**
@@ -160,7 +173,7 @@ public abstract class BaseTable implements AutoCloseable {
     /**
      * Returns the vector with the given name, or {@code null} if the name is not found. Names are case-sensitive.
      *
-     *  @param columnName   The name of the vector
+     * @param columnName   The name of the vector
      * @return the Vector with the given name, or null
      */
     FieldVector getVector(String columnName) {

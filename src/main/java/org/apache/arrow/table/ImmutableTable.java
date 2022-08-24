@@ -116,9 +116,12 @@ public class ImmutableTable extends BaseTable implements Iterable<ImmutableCurso
      */
     private void setRowCount(int rowCount) {
         this.rowCount = rowCount;
+/*
+        TODO: Double check that this isn't wanted
         for (FieldVector v : fieldVectors) {
             v.setValueCount(rowCount);
         }
+*/
     }
 
     /**

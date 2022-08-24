@@ -2,6 +2,7 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
@@ -17,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BaseTableTest {
 
+    public static final String INT_VECTOR_NAME = "intCol";
     private BufferAllocator allocator;
     private Schema schema1;
 
@@ -28,7 +30,7 @@ class BaseTableTest {
         ArrowType binaryArrowType = new ArrowType.Binary();
         FieldType intFieldType = new FieldType(true, intArrowType, null);
         FieldType vcFieldType = new FieldType(true, binaryArrowType, null);
-        fieldList.add(new Field("intCol", intFieldType, null));
+        fieldList.add(new Field(INT_VECTOR_NAME, intFieldType, null));
         fieldList.add(new Field("varCharColNoDictionary", intFieldType, null));
 
         schema1 = new Schema(fieldList);
@@ -39,21 +41,31 @@ class BaseTableTest {
     }
 
     @Test
-    void getReader() {
+    void getReaderByName() {
+        try(MutableTable t = MutableTable.create(schema1, allocator)) {
+            assertNotNull(t.getReader(INT_VECTOR_NAME));
+        }
     }
 
     @Test
-    void testGetReader() {
+    void getReaderByIndex() {
+        try(MutableTable t = MutableTable.create(schema1, allocator)) {
+            assertNotNull(t.getReader(0));
+        }
     }
 
     @Test
-    void testGetReader1() {
+    void getReaderByField() {
+        try(MutableTable t = MutableTable.create(schema1, allocator)) {
+            assertNotNull(t.getReader(t.getField(INT_VECTOR_NAME)));
+        }
     }
 
     @Test
     void getSchema() {
-        MutableTable t = MutableTable.create(schema1, allocator);
-        assertEquals(schema1, t.getSchema());
+        try(MutableTable t = MutableTable.create(schema1, allocator)) {
+            assertEquals(schema1, t.getSchema());
+        }
     }
 
     @Test
@@ -66,10 +78,28 @@ class BaseTableTest {
 
     @Test
     void close() {
+        IntVector v = new IntVector(INT_VECTOR_NAME, allocator);
+        v.setSafe(0, 132);
+        List<FieldVector> vectors = new ArrayList<>();
+        vectors.add(v);
+        v.setValueCount(1);
+        try (ImmutableTable t = new ImmutableTable(vectors)) {
+            t.close();
+            for (FieldVector fieldVector: t.fieldVectors) {
+                assertEquals(0, fieldVector.getValueCount());
+            }
+        }
     }
 
     @Test
     void getRowCount() {
+        IntVector v = new IntVector(INT_VECTOR_NAME, allocator);
+        v.setSafe(0, 132);
+
+        try (ImmutableTable t = new ImmutableTable(List.of(v))) {
+            // TODO: handle setting rowcount on ImmutableTable construction
+            assertEquals(1, t.getRowCount());
+        }
     }
 
     @Test
@@ -78,14 +108,23 @@ class BaseTableTest {
 
     @Test
     void getVector() {
+        try (ImmutableTable t = ImmutableTable.create(schema1, allocator)) {
+            assertNotNull(t.getVector(0));
+        }
     }
 
     @Test
     void testGetVector() {
+        try (ImmutableTable t = ImmutableTable.create(schema1, allocator)) {
+            assertNotNull(t.getVector(INT_VECTOR_NAME));
+        }
     }
 
     @Test
     void immutableCursor() {
+        try (ImmutableTable t = ImmutableTable.create(schema1, allocator)) {
+            assertNotNull(t.immutableCursor());
+        }
     }
 
     @Test
@@ -97,11 +136,10 @@ class BaseTableTest {
             v.set(1, 2);
             v.set(2, 3);
             assertEquals(2, v.get(1));
-            v.setValueCount(3);  // This doesn't work
-            //t.setRowCount(3);
+            t.setRowCount(3);
             List<Integer> values = new ArrayList<>();
             for (MutableCursor r : t) {
-                values.add(r.getInt("count"));
+                values.add(r.getInt(INT_VECTOR_NAME));
             }
             assertEquals(3, values.size());
             assertTrue(values.containsAll(List.of(1, 2, 3)));

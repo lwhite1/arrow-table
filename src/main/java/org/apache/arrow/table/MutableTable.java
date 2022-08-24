@@ -6,6 +6,7 @@ import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.TransferPair;
@@ -25,6 +26,8 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      * TODO: This is a prototype implementation. Replace with bitmap vector
      */
     private final Set<Integer> deletedRows = new HashSet<>();
+
+    private DictionaryProvider dictionaryProvider;
 
     /**
      * Constructs new instance containing each of the given vectors.
@@ -51,7 +54,6 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
     public MutableTable(VectorSchemaRoot vsr) {
         this(vsr.getSchema(), vsr.getFieldVectors(), vsr.getRowCount());
     }
-
 
     /**
      * Constructs a new instance.
@@ -86,7 +88,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
     }
 
     /**
-     * Creates a new set of empty vectors corresponding to the given schema.
+     * Creates a table on a new set of empty vectors corresponding to the given schema.
      */
     public static MutableTable create(Schema schema, BufferAllocator allocator) {
         List<FieldVector> fieldVectors = new ArrayList<>();
@@ -186,9 +188,12 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      */
     public void setRowCount(int rowCount) {
         super.rowCount = rowCount;
+/*
+        Double check that this isn't wanted
         for (FieldVector v : fieldVectors) {
             v.setValueCount(rowCount);
         }
+*/
     }
 
     /**

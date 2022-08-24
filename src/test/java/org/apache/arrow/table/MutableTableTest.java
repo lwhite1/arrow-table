@@ -19,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MutableTableTest {
 
+    private static final String INT_VECTOR_NAME = "intCol";
+
     private BufferAllocator allocator;
     private Schema schema1;
 
@@ -28,7 +30,7 @@ class MutableTableTest {
         List<Field> fieldList = new ArrayList<>();
         ArrowType arrowType =  new ArrowType.Int(32,true);
         FieldType intFieldType = new FieldType(true, arrowType, null);
-        fieldList.add(new Field("count", intFieldType, null));
+        fieldList.add(new Field(INT_VECTOR_NAME, intFieldType, null));
         schema1 = new Schema(fieldList);
     }
 
@@ -104,15 +106,15 @@ class MutableTableTest {
     @Test
     void getVectorByName() {
         MutableTable t = MutableTable.create(schema1, allocator);
-        FieldVector v = t.getVector("count");
-        assertEquals("count", v.getName());
+        FieldVector v = t.getVector(INT_VECTOR_NAME);
+        assertEquals(INT_VECTOR_NAME, v.getName());
     }
 
     @Test
     void getVectorByPosition() {
         MutableTable t = MutableTable.create(schema1, allocator);
         FieldVector v = t.getVector(0);
-        assertEquals("count", v.getName());
+        assertEquals(INT_VECTOR_NAME, v.getName());
     }
 
     @Test
@@ -123,11 +125,10 @@ class MutableTableTest {
             v.set(0, 1);
             v.set(1, 2);
             v.set(2, 3);
-            v.setValueCount(3);  // This doesn't work
             t.setRowCount(3);
             List<Integer> values = new ArrayList<>();
             for (MutableCursor r : t) {
-                values.add(r.getInt("count"));
+                values.add(r.getInt(INT_VECTOR_NAME));
             }
             assertEquals(3, values.size());
             assertTrue(values.containsAll(List.of(1, 2, 3)));

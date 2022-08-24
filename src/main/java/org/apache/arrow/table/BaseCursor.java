@@ -7,7 +7,6 @@ public abstract class BaseCursor {
 
     // TODO: pull other fields and methods up
 
-
     /** The table we're enumerating */
     protected final BaseTable table;
 
@@ -36,9 +35,7 @@ public abstract class BaseCursor {
         this.defaultCharacterSet = charset;
     }
 
-
     public Charset getDefaultCharacterSet() {
         return defaultCharacterSet;
     }
-
 }

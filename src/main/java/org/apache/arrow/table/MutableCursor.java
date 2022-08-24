@@ -3,6 +3,9 @@ package org.apache.arrow.table;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.dictionary.Dictionary;
+import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
+import org.apache.arrow.vector.types.pojo.Field;
 
 import java.nio.charset.Charset;
 
@@ -110,6 +113,7 @@ public class MutableCursor extends ImmutableCursor {
     public MutableCursor setVarChar(int columnIndex, String value) {
         VarCharVector v = (VarCharVector) table.getVector(columnIndex);
         v.set(getRowNumber(), value.getBytes(getDefaultCharacterSet()));
+        // TODO: Finish implementation (because this doesn't handle dictionaries, etc)
         return this;
     }
 
@@ -119,11 +123,19 @@ public class MutableCursor extends ImmutableCursor {
      * IllegalArgumentException is thrown if it has a different type to that named in the method
      * signature
      *
+     * @param vectorName    The name of the vector to modify
+     * @param value         The new value for the current row
      * @return this MutableCursor for chaining operations
      */
-    public MutableCursor setVarChar(String columnName, String value) {
-        VarCharVector v = (VarCharVector) table.getVector(columnName);
-        v.set(getRowNumber(), value.getBytes(getDefaultCharacterSet()));
+    public MutableCursor setVarChar(String vectorName, String value) {
+        VarCharVector v = (VarCharVector) table.getVector(vectorName);
+        Dictionary dictionary = dictionary(v);
+        if (dictionary != null) {
+            v.set(getRowNumber(), value.getBytes(getDefaultCharacterSet()));
+            // TODO: Finish implementation (because this doesn't handle dictionaries, etc)
+        } else {
+
+        }
         return this;
     }
 
@@ -135,4 +147,28 @@ public class MutableCursor extends ImmutableCursor {
     private void copyRow(int rowIdx) {
 
     }
+
+    private Dictionary dictionary(FieldVector vector) {
+        Field field = table.getField(vector.getName());
+        // TODO: Map the dictionary to the vector so we don't need to keep recreating
+        //       Also map a ValueHolder for each vector
+        DictionaryEncoding dictionaryEncoding = field.getDictionary();
+        if (dictionaryEncoding != null) {
+            return new Dictionary(vector, dictionaryEncoding);
+        }
+        return null;
+    }
+
+/*    *//**
+     * Holds objects for a vector so that they need not be created more than once
+     *//*
+    private static class VectorHelper {
+        final Dictionary dictionary;
+        final ValueHolder holder;
+
+        public VectorHelper(Dictionary dictionary, ValueHolder holder) {
+            this.dictionary = dictionary;
+            this.holder = holder;
+        }
+    }*/
 }
