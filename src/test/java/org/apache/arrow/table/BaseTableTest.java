@@ -72,10 +72,38 @@ class BaseTableTest {
 
     @Test
     void insertVector() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            ArrowType intArrowType =  new ArrowType.Int(32,true);
+            FieldType intFieldType = new FieldType(true, intArrowType, null);
+            IntVector v3 = new IntVector("3", intFieldType, allocator);
+            List<FieldVector> revisedVectors = t.insertVector(2, v3);
+            assertEquals(3, revisedVectors.size());
+            assertEquals(v3, revisedVectors.get(2));
+        }
+    }
+
+    @Test
+    void insertVectorFirstPosition() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            ArrowType intArrowType =  new ArrowType.Int(32,true);
+            FieldType intFieldType = new FieldType(true, intArrowType, null);
+            IntVector v3 = new IntVector("3", intFieldType, allocator);
+            List<FieldVector> revisedVectors = t.insertVector(0, v3);
+            assertEquals(3, revisedVectors.size());
+            assertEquals(v3, revisedVectors.get(0));
+        }
     }
 
     @Test
     void extractVector() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            List<FieldVector> revisedVectors= t.extractVector(0);
+            assertEquals(2, t.getVectorCount()); // vector not removed from table yet
+            assertEquals(1, revisedVectors.size());
+        }
     }
 
     @Test
@@ -119,6 +147,7 @@ class BaseTableTest {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
             assertNotNull(t.getVector(INT_VECTOR_NAME_1));
+            assertNull(t.getVector("foobar"));
         }
     }
 
@@ -161,5 +190,10 @@ class BaseTableTest {
 
     @Test
     void isDeletedRow() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            assertFalse(t.isDeletedRow(0));
+            assertFalse(t.isDeletedRow(1));
+        }
     }
 }

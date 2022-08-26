@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.arrow.table.TestUtils.INT_VECTOR_NAME_1;
 import static org.apache.arrow.table.TestUtils.twoIntColumns;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,27 +42,19 @@ class CursorTest {
 
     @Test
     void at() {
-        try (MutableTable t = MutableTable.create(schema1, allocator)) {
-            t.allocateNew();
-            IntVector v = (IntVector) t.getVector(0);
-            v.set(0, 1);
-            v.set(1, 2);
-            v.set(2, 3);
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
             assertEquals(c.getRowNumber(), -1);
             c.at(1);
             assertEquals(c.getRowNumber(), 1);
-            assertEquals(2, c.getInt(0));
         }
     }
 
     @Test
     void getIntByVectorIndex() {
-        try (MutableTable t = MutableTable.create(schema1, allocator)) {
-            t.allocateNew();
-            IntVector v = (IntVector) t.getVector(0);
-            v.set(0, 1);
-            v.set(1, 2);
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
             c.at(1);
             assertEquals(2, c.getInt(0));
@@ -70,14 +63,11 @@ class CursorTest {
 
     @Test
     void getIntByVectorName() {
-        try (MutableTable t = MutableTable.create(schema1, allocator)) {
-            t.allocateNew();
-            IntVector v = (IntVector) t.getVector(0);
-            v.set(0, 1);
-            v.set(1, 2);
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
             c.at(1);
-            assertEquals(2, c.getInt(INT_VECTOR_NAME));
+            assertEquals(2, c.getInt(INT_VECTOR_NAME_1));
         }
     }
 
@@ -94,5 +84,32 @@ class CursorTest {
 
     @Test
     void next() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            Cursor c = t.immutableCursor();
+            c.at(0);
+            c.next();
+            assertEquals(1, c.getRowNumber());
+        }
+    }
+
+    @Test
+    void isNull() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            Cursor c = t.immutableCursor();
+            c.at(1);
+            assertFalse(c.isNull(0));
+        }
+    }
+
+    @Test
+    void isNullByFieldName() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            Cursor c = t.immutableCursor();
+            c.at(1);
+            assertFalse(c.isNull(INT_VECTOR_NAME_1));
+        }
     }
 }

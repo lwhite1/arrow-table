@@ -36,7 +36,7 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
-     * Constructs a new MutableCursor backed by the given table
+     * Constructs a newCursor backed by the given table
      * @param table     the table that this Cursor object represents
      * @param charset   the standard charset for decoding bytes into strings. Note: This can be overridden for
      *                  individual columns
@@ -46,7 +46,7 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
-     * Moves this MutableCursor to the given 0-based row index
+     * Moves this Cursor to the given 0-based row index
      * @return this Cursor for chaining
      **/
     public Cursor at(int rowNumber) {
@@ -58,6 +58,12 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     /** Returns true if the value at columnName is null, and false otherwise */
     public boolean isNull(String columnName) {
         ValueVector vector = table.getVector(columnName);
+        return vector.isNull(rowNumber);
+    }
+
+    /** Returns true if the value at columnName is null, and false otherwise */
+    public boolean isNull(int columnIndex) {
+        ValueVector vector = table.getVector(columnIndex);
         return vector.isNull(rowNumber);
     }
 
@@ -171,7 +177,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      */
     private Iterator<Integer> intIterator() {
         return new Iterator<>() {
-            //int row = -1;
 
             @Override
             public boolean hasNext() {

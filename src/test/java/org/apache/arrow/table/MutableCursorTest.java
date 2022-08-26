@@ -12,13 +12,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.apache.arrow.table.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-class TableTest {
+class MutableCursorTest {
 
     private final ArrowType intArrowType = new ArrowType.Int(32, true);
     private final FieldType intFieldType = new FieldType(true, intArrowType, null);
@@ -35,60 +34,60 @@ class TableTest {
         schema1 = new Schema(fieldList);
     }
 
+
     @Test
-    void of() {
+    void at() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
-        try (Table t = Table.of(vectorList.toArray(new FieldVector[2]))) {
-            assertEquals(2, t.getRowCount());
-            assertEquals(2, t.getVectorCount());
+        try (MutableTable t = new MutableTable(vectorList)) {
+            Cursor c = t.immutableCursor();
+            assertEquals(c.getRowNumber(), -1);
+            c.at(1);
+            assertEquals(c.getRowNumber(), 1);
+            assertEquals(2, c.getInt(0));
         }
     }
 
     @Test
-    void addVector() {
+    void setNullByColumnIndex() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
-        try (Table t = new Table(vectorList)) {
-            IntVector v3 = new IntVector("3", intFieldType, allocator);
-            Table t2 = t.addVector(2, v3);
-            System.out.println(t2.getSchema().getFields());
-            assertEquals(3, t2.fieldVectors.size());
-            assertEquals(v3, t2.getVector(2));
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            assertFalse(c.isNull(0));
+            c.setNull(0);
+            assertTrue(c.isNull(0));
         }
     }
 
     @Test
-    void removeVector() {
+    void setNullByFieldName() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
-        try (Table t = new Table(vectorList)) {
-            IntVector v2 = (IntVector) t.getVector(1);
-            Table t2 = t.removeVector(0);
-            assertEquals(1, t2.fieldVectors.size());
-            assertEquals(v2, t2.getVector(0));
-        }
-    }
-
-    /**
-     * Tests iterator construction. Cursor tests cover iterator functions
-     */
-    @Test
-    void iterator() {
-        List<FieldVector> vectorList = twoIntColumns(allocator);
-        try (Table t = new Table(vectorList)) {
-            Iterator<Cursor> iterator = t.iterator();
-            assertNotNull(iterator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            assertFalse(c.isNull(INT_VECTOR_NAME_1));
+            c.setNull(INT_VECTOR_NAME_1);
+            assertTrue(c.isNull(INT_VECTOR_NAME_1));
         }
     }
 
     @Test
-    void toImmutableTable() {
-        List<FieldVector> vectorList = twoIntColumns(allocator);
-        try (Table t = new Table(vectorList)) {
-            assertEquals(t, t.toImmutableTable());
-        }
+    void delete() {
     }
 
     @Test
-    void toMutableTable() {
+    void setInt() {
+    }
 
+    @Test
+    void testSetInt() {
+    }
+
+    @Test
+    void setVarChar() {
+    }
+
+    @Test
+    void testSetVarChar() {
     }
 }

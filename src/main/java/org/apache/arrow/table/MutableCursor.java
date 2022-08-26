@@ -71,7 +71,22 @@ public class MutableCursor extends Cursor {
      */
     public MutableCursor setNull(String columnName) {
         FieldVector v = table.getVector(columnName);
-        // TODO: Real implementation without casts after fixing setNull issue
+        // TODO: Real implementation (without casts) after fixing setNull issue
+        if (v instanceof IntVector) {
+            ((IntVector) v).setNull(getRowNumber());
+        }
+        return this;
+    }
+
+    /**
+     * Sets a null value in the named vector at the current row.
+     *
+     * @param columnIndex The index of the column to update
+     * @return this Cursor for method chaining
+     */
+    public MutableCursor setNull(int columnIndex) {
+        FieldVector v = table.getVector(columnIndex);
+        // TODO: Real implementation (without casts) after fixing setNull issue
         if (v instanceof IntVector) {
             ((IntVector) v).setNull(getRowNumber());
         }
