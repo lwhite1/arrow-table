@@ -43,18 +43,8 @@ public abstract class BaseTable implements AutoCloseable {
         this.fieldVectors = fieldVectors;
         for (FieldVector v : fieldVectors) {
             fieldVectorsMap.put(v.getField(), v);
+            v.setValueCount(rowCount);
         }
-    }
-
-    /**
-     * Do an adaptive allocation of each vector for memory purposes. Sizes will be based on previously
-     * defined initial allocation for each vector (and subsequent size learned).
-     */
-    public void allocateNew() {
-        for (FieldVector v : fieldVectors) {
-            v.allocateNew();
-        }
-        rowCount = 0;
     }
 
     /**
@@ -118,13 +108,18 @@ public abstract class BaseTable implements AutoCloseable {
      */
     List<FieldVector> insertVector(int index, FieldVector vector) {
         Preconditions.checkNotNull(vector);
-        Preconditions.checkArgument(index >= 0 && index < fieldVectors.size());
+        Preconditions.checkArgument(index >= 0 && index <= fieldVectors.size());
         List<FieldVector> newVectors = new ArrayList<>();
-        for (int i = 0; i < fieldVectors.size(); i++) {
-            if (i == index) {
-                newVectors.add(vector);
+        if (index == fieldVectors.size()) {
+            newVectors.addAll(fieldVectors);
+            newVectors.add(vector);
+        } else {
+            for (int i = 0; i < fieldVectors.size(); i++) {
+                if (i == index) {
+                    newVectors.add(vector);
+                }
+                newVectors.add(fieldVectors.get(i));
             }
-            newVectors.add(fieldVectors.get(i));
         }
         return newVectors;
     }
@@ -135,7 +130,7 @@ public abstract class BaseTable implements AutoCloseable {
      * @param index field index
      * @return out List of FieldVectos like the list in this table, but with the argument removed
      */
-    public List<FieldVector> extractVector(int index) {
+    List<FieldVector> extractVector(int index) {
         Preconditions.checkArgument(index >= 0 && index < fieldVectors.size());
         List<FieldVector> newVectors = new ArrayList<>();
         for (int i = 0; i < fieldVectors.size(); i++) {
@@ -144,6 +139,13 @@ public abstract class BaseTable implements AutoCloseable {
             }
         }
         return newVectors;
+    }
+
+    /**
+     * Returns the number of vectors (columns) in this table
+     */
+    public int getVectorCount() {
+        return fieldVectors.size();
     }
 
     @Override

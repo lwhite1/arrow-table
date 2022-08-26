@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * Table is an immutable, tabular data structure.
+ * Table is an immutable tabular data structure.
  *
  * See {@link MutableTable} for a mutable version.
  * See {@link VectorSchemaRoot} for batch processing use cases
@@ -47,7 +47,10 @@ public class Table extends BaseTable implements Iterable<Cursor> {
 
 
     /**
-     * Constructs a new instance.
+     * Constructs a new instance with the number of rows set to the value count of the first FieldVector
+     *
+     * All vectors must have the same value count. Although this is not checked, inconsistent counts may lead to
+     * exceptions or other undefined behavior later.
      *
      * @param fields       The types of each vector.
      * @param fieldVectors The data vectors (must be equal in size to <code>fields</code>.
@@ -88,40 +91,10 @@ public class Table extends BaseTable implements Iterable<Cursor> {
     }
 
     /**
-     * Creates a new set of empty vectors corresponding to the given schema.
-     */
-    public static Table create(Schema schema, BufferAllocator allocator) {
-        List<FieldVector> fieldVectors = new ArrayList<>();
-        for (Field field : schema.getFields()) {
-            FieldVector vector = field.createVector(allocator);
-            fieldVectors.add(vector);
-        }
-        if (fieldVectors.size() != schema.getFields().size()) {
-            throw new IllegalArgumentException("The root vector did not create the right number of children. found " +
-                    fieldVectors.size() + " expected " + schema.getFields().size());
-        }
-        return new Table(schema, fieldVectors, 0);
-    }
-
-    /**
      * Constructs a new instance from vectors.
      */
     public static Table of(FieldVector... vectors) {
         return new Table(Arrays.stream(vectors).collect(Collectors.toList()));
-    }
-
-    /**
-     * Sets the rowCount for this MutableTable, and the valueCount for each of its vectors to the argument
-     * @param rowCount  the number of rows in the table and in each vector
-     */
-    private void setRowCount(int rowCount) {
-        this.rowCount = rowCount;
-/*
-        TODO: Double check that this isn't wanted
-        for (FieldVector v : fieldVectors) {
-            v.setValueCount(rowCount);
-        }
-*/
     }
 
     /**
@@ -146,7 +119,7 @@ public class Table extends BaseTable implements Iterable<Cursor> {
     }
 
     /**
-     * Returns an Cursor iterator for this Table
+     * Returns a Cursor iterator for this Table
      */
     @Override
     public Iterator<Cursor> iterator() {

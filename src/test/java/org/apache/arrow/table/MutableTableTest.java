@@ -76,31 +76,22 @@ class MutableTableTest {
     }
 
     @Test
-    void getReader() {
-    }
-
-    @Test
-    void getReader1() {
-    }
-
-    @Test
-    void addVector() {
-    }
-
-    @Test
-    void removeVector() {
-    }
-
-    @Test
-    void close() {
-    }
-
-    @Test
     void setGetRowCount() {
     }
 
     @Test
     void markRowDeleted() {
+        try (MutableTable t = MutableTable.create(schema1, allocator)) {
+            t.allocateNew();
+            IntVector v = (IntVector) t.getVector(0);
+            v.set(0, 1);
+            v.set(1, 2);
+            v.set(2, 3);
+            t.setRowCount(3);
+            MutableCursor c = t.mutableCursor();
+            c.at(1).delete();
+            assertTrue(t.isDeletedRow(1));
+        }
     }
 
     @Test

@@ -51,6 +51,7 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      **/
     public Cursor at(int rowNumber) {
         this.rowNumber = rowNumber;
+        this.nextRowSet = false;
         return this;
     }
 
@@ -170,17 +171,17 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      */
     private Iterator<Integer> intIterator() {
         return new Iterator<>() {
-            int row = -1;
+            //int row = -1;
 
             @Override
             public boolean hasNext() {
-                return row < table.getRowCount() - 1;
+                return rowNumber < table.getRowCount() - 1;
             }
 
             @Override
             public Integer next() {
-                row++;
-                return row;
+                rowNumber++;
+                return rowNumber;
             }
         };
     }

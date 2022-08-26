@@ -10,15 +10,16 @@ import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.arrow.table.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BaseTableTest {
 
-    public static final String INT_VECTOR_NAME = "intCol";
     private BufferAllocator allocator;
     private Schema schema1;
 
@@ -31,40 +32,41 @@ class BaseTableTest {
         FieldType intFieldType = new FieldType(true, intArrowType, null);
         FieldType vcFieldType = new FieldType(true, binaryArrowType, null);
         fieldList.add(new Field(INT_VECTOR_NAME, intFieldType, null));
-        fieldList.add(new Field("varCharColNoDictionary", intFieldType, null));
+        fieldList.add(new Field("varCharColNoDictionary", vcFieldType, null));
 
         schema1 = new Schema(fieldList);
     }
 
     @Test
-    void allocateNew() {
-    }
-
-    @Test
     void getReaderByName() {
-        try(MutableTable t = MutableTable.create(schema1, allocator)) {
-            assertNotNull(t.getReader(INT_VECTOR_NAME));
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            assertNotNull(t.getReader(INT_VECTOR_NAME_1));
         }
     }
 
     @Test
     void getReaderByIndex() {
-        try(MutableTable t = MutableTable.create(schema1, allocator)) {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
             assertNotNull(t.getReader(0));
         }
     }
 
     @Test
     void getReaderByField() {
-        try(MutableTable t = MutableTable.create(schema1, allocator)) {
-            assertNotNull(t.getReader(t.getField(INT_VECTOR_NAME)));
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            assertNotNull(t.getReader(t.getField(INT_VECTOR_NAME_1)));
         }
     }
 
     @Test
     void getSchema() {
-        try(MutableTable t = MutableTable.create(schema1, allocator)) {
-            assertEquals(schema1, t.getSchema());
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            assertNotNull(t.getSchema());
+            assertEquals(2, t.getSchema().getFields().size());
         }
     }
 
@@ -93,12 +95,10 @@ class BaseTableTest {
 
     @Test
     void getRowCount() {
-        IntVector v = new IntVector(INT_VECTOR_NAME, allocator);
-        v.setSafe(0, 132);
-
-        try (Table t = new Table(List.of(v))) {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
             // TODO: handle setting rowcount on Table construction
-            assertEquals(1, t.getRowCount());
+            assertEquals(2, t.getRowCount());
         }
     }
 
@@ -108,21 +108,24 @@ class BaseTableTest {
 
     @Test
     void getVector() {
-        try (Table t = Table.create(schema1, allocator)) {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
             assertNotNull(t.getVector(0));
         }
     }
 
     @Test
     void testGetVector() {
-        try (Table t = Table.create(schema1, allocator)) {
-            assertNotNull(t.getVector(INT_VECTOR_NAME));
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            assertNotNull(t.getVector(INT_VECTOR_NAME_1));
         }
     }
 
     @Test
     void immutableCursor() {
-        try (Table t = Table.create(schema1, allocator)) {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
             assertNotNull(t.immutableCursor());
         }
     }

@@ -125,6 +125,17 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
     }
 
     /**
+     * Do an adaptive allocation of each vector for memory purposes. Sizes will be based on previously
+     * defined initial allocation for each vector (and subsequent size learned).
+     */
+    void allocateNew() {
+        for (FieldVector v : fieldVectors) {
+            v.allocateNew();
+        }
+        rowCount = 0;
+    }
+
+    /**
      * Returns a copy of this table, with all deleted rows removed
      *
      * @return a new table with no empty rows among the data
