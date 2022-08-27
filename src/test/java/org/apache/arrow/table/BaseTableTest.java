@@ -175,7 +175,11 @@ class BaseTableTest {
             }
             assertEquals(3, values.size());
             assertTrue(values.containsAll(List.of(1, 2, 3)));
-            System.out.println(t.contentToTSVString());
+            String printed = "intCol\tvarCharColNoDictionary\n" +
+                    "1\tnull\n" +
+                    "2\tnull\n" +
+                    "3\tnull\n";
+            assertEquals(printed, t.contentToTSVString());
         }
     }
 
