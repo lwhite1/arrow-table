@@ -38,12 +38,18 @@ public abstract class BaseTable implements AutoCloseable {
      * @param fieldVectors  the FieldVectors containing the table's data
      */
     public BaseTable(Schema schema, int rowCount, List<FieldVector> fieldVectors) {
+        if (schema.getFields().size() != fieldVectors.size()) {
+            throw new IllegalArgumentException("Fields must match field vectors. Found " +
+                    fieldVectors.size() + " vectors and " + schema.getFields().size() + " fields");
+        }
         this.schema = schema;
         this.rowCount = rowCount;
         this.fieldVectors = fieldVectors;
-        for (FieldVector v : fieldVectors) {
-            fieldVectorsMap.put(v.getField(), v);
-            v.setValueCount(rowCount);
+        for (int i = 0; i < schema.getFields().size(); ++i) {
+            Field field = schema.getFields().get(i);
+            FieldVector vector = fieldVectors.get(i);
+            fieldVectorsMap.put(field, vector);
+            vector.setValueCount(rowCount);
         }
     }
 

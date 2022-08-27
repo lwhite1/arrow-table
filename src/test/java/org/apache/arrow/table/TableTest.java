@@ -45,14 +45,27 @@ class TableTest {
     }
 
     @Test
+    void constructor() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        List<Field> fieldList = new ArrayList<>();
+        for (FieldVector v : vectorList) {
+            fieldList.add(v.getField());
+        }
+        try (Table t = new Table(fieldList, vectorList, 2)) {
+            assertEquals(2, t.getRowCount());
+            assertEquals(2, t.getVectorCount());
+        }
+    }
+
+    @Test
     void addVector() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
             IntVector v3 = new IntVector("3", intFieldType, allocator);
             Table t2 = t.addVector(2, v3);
-            System.out.println(t2.getSchema().getFields());
             assertEquals(3, t2.fieldVectors.size());
             assertEquals(v3, t2.getVector(2));
+            t2.close();
         }
     }
 
@@ -68,14 +81,40 @@ class TableTest {
     }
 
     /**
-     * Tests iterator construction. Cursor tests cover iterator functions
+     * Tests table iterator in enhanced for loop
      */
     @Test
-    void iterator() {
+    void iterator1() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
             Iterator<Cursor> iterator = t.iterator();
             assertNotNull(iterator);
+            assertTrue(iterator.hasNext());
+            int sum = 0;
+            for (Cursor row: t) {
+                sum += row.getInt(0);
+            }
+            assertEquals(3, sum);
+        }
+    }
+
+    /**
+     * Tests explicit iterator
+     */
+    @Test
+    void iterator2() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            Iterator<Cursor> iterator = t.iterator();
+            assertNotNull(iterator);
+            assertTrue(iterator.hasNext());
+            int sum = 0;
+            Iterator<Cursor> it = t.iterator();
+            while (it.hasNext()) {
+                Cursor row = it.next();
+                sum += row.getInt(0);
+            }
+            assertEquals(3, sum);
         }
     }
 

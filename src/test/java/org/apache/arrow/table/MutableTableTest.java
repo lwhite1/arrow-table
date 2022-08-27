@@ -22,6 +22,9 @@ class MutableTableTest {
 
     private static final String INT_VECTOR_NAME = "intCol";
 
+    private final ArrowType intArrowType = new ArrowType.Int(32, true);
+    private final FieldType intFieldType = new FieldType(true, intArrowType, null);
+
     private BufferAllocator allocator;
     private Schema schema1;
 
@@ -29,8 +32,6 @@ class MutableTableTest {
     public void init() {
         allocator = new RootAllocator(Long.MAX_VALUE);
         List<Field> fieldList = new ArrayList<>();
-        ArrowType arrowType =  new ArrowType.Int(32,true);
-        FieldType intFieldType = new FieldType(true, arrowType, null);
         fieldList.add(new Field(INT_VECTOR_NAME, intFieldType, null));
         schema1 = new Schema(fieldList);
     }
@@ -51,6 +52,19 @@ class MutableTableTest {
     void of() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (MutableTable t = MutableTable.of(vectorList.toArray(new FieldVector[2]))) {
+            assertEquals(2, t.getRowCount());
+            assertEquals(2, t.getVectorCount());
+        }
+    }
+
+    @Test
+    void constructor() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        List<Field> fieldList = new ArrayList<>();
+        for (FieldVector v : vectorList) {
+            fieldList.add(v.getField());
+        }
+        try (MutableTable t = new MutableTable(fieldList, vectorList, 2)) {
             assertEquals(2, t.getRowCount());
             assertEquals(2, t.getVectorCount());
         }
@@ -125,6 +139,37 @@ class MutableTableTest {
         MutableTable t = MutableTable.create(schema1, allocator);
         FieldVector v = t.getVector(0);
         assertEquals(INT_VECTOR_NAME, v.getName());
+    }
+
+    @Test
+    void addVector() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            IntVector v3 = new IntVector("3", intFieldType, allocator);
+            MutableTable t2 = t.addVector(2, v3);
+            assertEquals(3, t2.fieldVectors.size());
+            assertEquals(v3, t2.getVector(2));
+            t2.close();
+        }
+    }
+
+    @Test
+    void removeVector() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            IntVector v2 = (IntVector) t.getVector(1);
+            MutableTable t2 = t.removeVector(0);
+            assertEquals(1, t2.fieldVectors.size());
+            assertEquals(v2, t2.getVector(0));
+        }
+    }
+
+    @Test
+    void toMutableTable() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            assertEquals(t, t.toMutableTable());
+        }
     }
 
     @Test

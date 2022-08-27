@@ -203,18 +203,6 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
         return this;
     }
 
-    @Override
-    public void close() {
-        try {
-            AutoCloseables.close(fieldVectors);
-        } catch (RuntimeException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            // should never happen since FieldVector.close() doesn't throw IOException
-            throw new RuntimeException(ex);
-        }
-    }
-
     /**
      * Sets the rowCount for this MutableTable, and the valueCount for each of its vectors to the argument
      * @param rowCount  the number of rows in the table and in each vector

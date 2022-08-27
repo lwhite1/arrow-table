@@ -44,7 +44,6 @@ public class Table extends BaseTable implements Iterable<Cursor> {
         this(vsr.getSchema(), vsr.getFieldVectors(), vsr.getRowCount());
     }
 
-
     /**
      * Constructs a new instance with the number of rows set to the value count of the first FieldVector
      *
@@ -78,15 +77,6 @@ public class Table extends BaseTable implements Iterable<Cursor> {
      */
     public Table(Schema schema, List<FieldVector> fieldVectors, int rowCount) {
         super(schema, rowCount, fieldVectors);
-        if (schema.getFields().size() != fieldVectors.size()) {
-            throw new IllegalArgumentException("Fields must match field vectors. Found " +
-                    fieldVectors.size() + " vectors and " + schema.getFields().size() + " fields");
-        }
-        for (int i = 0; i < schema.getFields().size(); ++i) {
-            Field field = schema.getFields().get(i);
-            FieldVector vector = fieldVectors.get(i);
-            fieldVectorsMap.put(field, vector);
-        }
     }
 
     /**
