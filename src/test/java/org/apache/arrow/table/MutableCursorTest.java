@@ -60,7 +60,32 @@ class MutableCursorTest {
     }
 
     @Test
-    void setNullByFieldName() {
+    void setIntlByColumnIndex() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            assertNotEquals(132, c.getInt(0));
+            c.setInt(0, 132).setInt(1, 146);
+            assertEquals(132, c.getInt(0));
+            assertEquals(146, c.getInt(1));
+        }
+    }
+
+    @Test
+    void setIntlByColumnName() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            assertNotEquals(132, c.getInt(INT_VECTOR_NAME_1));
+            c.setInt(INT_VECTOR_NAME_1, 132);
+            assertEquals(132, c.getInt(INT_VECTOR_NAME_1));
+        }
+    }
+
+    @Test
+    void setNullByColumnName() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (MutableTable t = new MutableTable(vectorList)) {
             MutableCursor c = t.mutableCursor();

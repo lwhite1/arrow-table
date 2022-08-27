@@ -99,7 +99,7 @@ public class MutableCursor extends Cursor {
      *
      * @return this row for chaining
      */
-    public MutableCursor delete() {
+    public MutableCursor deleteCurrentRow() {
         getTable().markRowDeleted(getRowNumber());
         return this;
     }
@@ -176,7 +176,12 @@ public class MutableCursor extends Cursor {
      * @param rowIdx the index or row number of the row to copy
      */
     private void copyRow(int rowIdx) {
+        int rowCount = table.rowCount;
+        for (FieldVector v: getTable().fieldVectors) {
+            //if (v.getField().getFieldType()) {}
 
+            // TODO: Can this be done in a type-specific way using a ValueHolder
+        }
     }
 
     /**
