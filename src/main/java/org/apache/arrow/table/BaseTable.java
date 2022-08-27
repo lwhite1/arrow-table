@@ -9,6 +9,7 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.TransferPair;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -203,6 +204,10 @@ public abstract class BaseTable implements AutoCloseable {
 
     public Cursor immutableCursor() {
         return new Cursor(this);
+    }
+
+    public Cursor immutableCursor(Charset defaultCharset) {
+        return new Cursor(this, defaultCharset);
     }
 
     /**

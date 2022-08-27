@@ -3,7 +3,6 @@ package org.apache.arrow.table;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
@@ -12,6 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +38,15 @@ class CursorTest {
     @AfterEach
     public void terminate() {
         allocator.close();
+    }
+
+    @Test
+    void constructor() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            Cursor c = t.immutableCursor(StandardCharsets.US_ASCII);
+            assertEquals(StandardCharsets.US_ASCII, c.getDefaultCharacterSet());
+        }
     }
 
     @Test

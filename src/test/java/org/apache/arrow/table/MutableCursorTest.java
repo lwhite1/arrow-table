@@ -10,6 +10,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,14 @@ class MutableCursorTest {
         schema1 = new Schema(fieldList);
     }
 
+    @Test
+    void constructor() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            Cursor c = t.mutableCursor(StandardCharsets.US_ASCII);
+            assertEquals(StandardCharsets.US_ASCII, c.getDefaultCharacterSet());
+        }
+    }
 
     @Test
     void at() {

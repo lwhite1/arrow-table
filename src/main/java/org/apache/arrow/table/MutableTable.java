@@ -12,6 +12,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.TransferPair;
 
 import javax.annotation.Nullable;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -256,12 +257,8 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
         return new MutableCursor(this);
     }
 
-    /**
-     * Returns a cursor with only 'get' operations. Use a MutableCursor if you need to update the data
-     * @return  a new Cursor for this table
-     */
-    public Cursor immutableCursor() {
-        return new Cursor(this);
+    public MutableCursor mutableCursor(Charset defaultCharset) {
+        return new MutableCursor(this, defaultCharset);
     }
 
     /**
