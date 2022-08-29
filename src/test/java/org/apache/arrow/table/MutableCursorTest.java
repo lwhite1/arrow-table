@@ -68,31 +68,6 @@ class MutableCursorTest {
     }
 
     @Test
-    void setIntlByColumnIndex() {
-        List<FieldVector> vectorList = twoIntColumns(allocator);
-        try (MutableTable t = new MutableTable(vectorList)) {
-            MutableCursor c = t.mutableCursor();
-            c.at(1);
-            assertNotEquals(132, c.getInt(0));
-            c.setInt(0, 132).setInt(1, 146);
-            assertEquals(132, c.getInt(0));
-            assertEquals(146, c.getInt(1));
-        }
-    }
-
-    @Test
-    void setIntlByColumnName() {
-        List<FieldVector> vectorList = twoIntColumns(allocator);
-        try (MutableTable t = new MutableTable(vectorList)) {
-            MutableCursor c = t.mutableCursor();
-            c.at(1);
-            assertNotEquals(132, c.getInt(INT_VECTOR_NAME_1));
-            c.setInt(INT_VECTOR_NAME_1, 132);
-            assertEquals(132, c.getInt(INT_VECTOR_NAME_1));
-        }
-    }
-
-    @Test
     void setNullByColumnName() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (MutableTable t = new MutableTable(vectorList)) {
@@ -105,22 +80,90 @@ class MutableCursorTest {
     }
 
     @Test
+    void setIntByColumnIndex() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            assertNotEquals(132, c.getInt(0));
+            c.setInt(0, 132).setInt(1, 146);
+            assertEquals(132, c.getInt(0));
+            assertEquals(146, c.getInt(1));
+        }
+    }
+
+    @Test
+    void setIntByColumnName() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            assertNotEquals(132, c.getInt(INT_VECTOR_NAME_1));
+            c.setInt(INT_VECTOR_NAME_1, 132);
+            assertEquals(132, c.getInt(INT_VECTOR_NAME_1));
+        }
+    }
+
+    @Test
+    void setVarCharByColumnIndex() {
+        List<FieldVector> vectorList = intPlusVarcharColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            assertEquals(2, t.rowCount);
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            assertEquals(2, c.getInt(0));
+            assertEquals("two", c.getVarChar(1));
+            c.setVarChar(1, "2");
+            c.at(1);
+            assertTrue(c.isDeletedRow());
+            c.at(2);
+            assertEquals("2", c.getVarChar(1));
+        }
+    }
+
+    @Test
+    void setVarCharByColumnName() {
+        List<FieldVector> vectorList = intPlusVarcharColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            assertEquals(2, t.rowCount);
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            assertEquals(2, c.getInt(0));
+            assertEquals("two", c.getVarChar(VARCHAR_VECTOR_NAME_1));
+            c.setVarChar(VARCHAR_VECTOR_NAME_1, "2");
+            c.at(1);
+            assertTrue(c.isDeletedRow());
+            c.at(2);
+            assertEquals("2", c.getVarChar(VARCHAR_VECTOR_NAME_1));
+
+            // ensure iteration works correctly
+            List<String> values = new ArrayList<>();
+            c.resetPosition();
+            while (c.hasNext()) {
+                c.next();
+                values.add(c.getVarChar(VARCHAR_VECTOR_NAME_1));
+            }
+            assertTrue(values.contains("one"));
+            assertTrue(values.contains("2"));
+            assertEquals(2, values.size());
+        }
+    }
+
+    @Test
     void delete() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableCursor c = t.mutableCursor();
+            c.at(0);
+            assertFalse(c.isDeletedRow());
+            c.deleteCurrentRow();
+            assertTrue(c.isDeletedRow());
+            assertTrue(t.isDeletedRow(0));
+        }
     }
 
     @Test
-    void setInt() {
-    }
+    void compact() {
 
-    @Test
-    void testSetInt() {
-    }
-
-    @Test
-    void setVarChar() {
-    }
-
-    @Test
-    void testSetVarChar() {
     }
 }

@@ -183,7 +183,6 @@ class BaseTableTest {
         }
     }
 
-
     @Test
     void slice() {
     }

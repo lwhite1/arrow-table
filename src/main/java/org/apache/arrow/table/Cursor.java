@@ -14,9 +14,6 @@ import java.util.NoSuchElementException;
  */
 public class Cursor extends BaseCursor implements Iterator<Cursor> {
 
-    /** the current row number */
-    private int rowNumber = -1;
-
     /** Indicates whether the next non-deleted row has been determined yet */
     private boolean nextRowSet;
 
@@ -43,6 +40,11 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      */
     public Cursor(BaseTable table, Charset charset) {
         super(table, charset);
+    }
+
+    @Override
+    Cursor resetPosition() {
+        return (Cursor) super.resetPosition();
     }
 
     /**

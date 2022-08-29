@@ -10,6 +10,9 @@ public abstract class BaseCursor {
     /** The table we're enumerating */
     protected final BaseTable table;
 
+    /** the current row number */
+    protected int rowNumber = -1;
+
     /**
      * Returns the standard character set to use for decoding strings. Can be overridden for individual columns
      * by providing the {@link Charset} as an argument in the getter
@@ -33,6 +36,11 @@ public abstract class BaseCursor {
     public BaseCursor(BaseTable table, Charset charset) {
         this.table = table;
         this.defaultCharacterSet = charset;
+    }
+
+    BaseCursor resetPosition() {
+        rowNumber = -1;
+        return this;
     }
 
     public Charset getDefaultCharacterSet() {
