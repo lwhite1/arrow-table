@@ -88,13 +88,29 @@ class MutableTableTest {
 
     @Test
     void compact() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableCursor c = t.mutableCursor();
+            c.at(0);
+            assertFalse(c.isDeletedRow());
+            c.deleteCurrentRow();
+            assertTrue(c.isDeletedRow());
+            assertTrue(t.isDeletedRow(0));
+            t.compact();
+            assertEquals(0, t.deletedRowCount());
+            assertEquals(1, t.rowCount);
+        }
     }
 
     @Test
     void compactTableWithNoDeletedRows() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (MutableTable t = MutableTable.of(vectorList.toArray(new FieldVector[2]))) {
-            assertEquals(t, t.compact());
+            int initialRowCount = t.rowCount;
+            int initialDeletedRowCount = t.deletedRowCount();
+            t.mutableCursor().compact();
+            assertEquals(initialRowCount, t.rowCount);
+            assertEquals(initialDeletedRowCount, t.deletedRowCount());
         }
     }
 

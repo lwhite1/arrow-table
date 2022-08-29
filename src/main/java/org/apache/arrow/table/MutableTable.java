@@ -137,21 +137,17 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
     }
 
     /**
-     * Returns this table if it contains no deleted rows, or a new copy with all deleted rows removed
+     * Returns this table with no deleted rows
      *
-     * @return a table with no empty rows among the data
+     * @return this table with any deleted rows removed
      */
     public MutableTable compact() {
-        if (deletedRowCount() == 0) {
-            return this;
-        }
-        MutableTable compacted = null;
-        MutableCursor cursor = mutableCursor();
+        mutableCursor().compact();
+        return this;
+    }
 
-        // TODO: copy the non-deleted rows into compacted table
-
-        deletedRows.clear();
-        return compacted;
+    void clearDeletedRows() {
+        this.deletedRows.clear();
     }
 
     /**
@@ -161,6 +157,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
         for (FieldVector v : fieldVectors) {
             v.clear();
         }
+        clearDeletedRows();
         rowCount = 0;
     }
 

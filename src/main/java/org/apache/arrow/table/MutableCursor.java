@@ -208,10 +208,22 @@ public class MutableCursor extends Cursor {
     private int copyRow(int rowIdx) {
 
         int nextRow = table.rowCount++;
-        for (FieldVector v: getTable().fieldVectors) {
-            copyValue(v, rowIdx, nextRow);
-        }
+        copyRow(rowIdx, nextRow);
         return nextRow;
+    }
+
+
+    /**
+     * Copies the data at {@code rowIdx} to the end of the table
+     *
+     * @param fromIndex the index or row number of the row to copy
+     * @param toIndex   the destination index (row number)
+     */
+    private void copyRow(int fromIndex, int toIndex) {
+
+        for (FieldVector v: getTable().fieldVectors) {
+            copyValue(v, fromIndex, toIndex);
+        }
     }
 
     private void copyValue(FieldVector v, int fromRow, int toRow) {
@@ -259,16 +271,13 @@ public class MutableCursor extends Cursor {
                 return new NullableFixedSizeBinaryHolder();
             case VARBINARY:
                 return new NullableVarBinaryHolder();
-
+            case BIT:
+                return new NullableBitHolder();
  */
             case VARCHAR:
                 byte[] bytes = ((VarCharVector) v).get(fromRow);
                 ((VarCharVector) v).set(toRow, bytes);
                 return;
- /*
-            case BIT:
-                return new NullableBitHolder();
-  */
             default:
                 throw new UnsupportedOperationException(buildErrorMessage("copy value", type));
         }
@@ -341,5 +350,24 @@ public class MutableCursor extends Cursor {
     @Override
     MutableCursor resetPosition() {
         return (MutableCursor) super.resetPosition();
+    }
+
+    void compact() {
+        if (((MutableTable) table).deletedRowCount() == 0) {
+            return;
+        }
+        int writePosition = 0;
+        while(hasNext()) {
+            next();
+            while (isDeletedRow()) {
+                next();
+            }
+            if (writePosition != rowNumber) {
+                copyRow(rowNumber, writePosition);
+                writePosition++;
+            }
+        }
+        ((MutableTable) table).clearDeletedRows();
+        ((MutableTable) table).setRowCount(writePosition);
     }
 }
