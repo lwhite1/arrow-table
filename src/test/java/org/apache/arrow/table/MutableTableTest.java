@@ -4,6 +4,7 @@ import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
@@ -188,6 +189,34 @@ class MutableTableTest {
         }
     }
 
+    /**
+     * Tests a slice operation where no length is provided, so the range extends to the end of the table
+     */
+    @Test
+    void sliceToEnd() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableTable slice = t.slice(1);
+            assertEquals(1, slice.rowCount);
+            assertEquals(2, t.rowCount); // memory is copied for slice, not transferred
+            slice.close();
+        }
+    }
+
+    /**
+     * Tests a slice operation with a given length parameter
+     */
+    @Test
+    void sliceRange() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableTable slice = t.slice(1, 1);
+            assertEquals(1, slice.rowCount);
+            assertEquals(2, t.rowCount); // memory is copied for slice, not transferred
+            slice.close();
+        }
+    }
+
     @Test
     void iterator() {
         try (MutableTable t = MutableTable.create(schema1, allocator)) {
@@ -205,4 +234,6 @@ class MutableTableTest {
             assertTrue(values.containsAll(List.of(1, 2, 3)));
         }
     }
+
+
 }

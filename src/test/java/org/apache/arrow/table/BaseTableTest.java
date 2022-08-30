@@ -194,14 +194,6 @@ class BaseTableTest {
     }
 
     @Test
-    void slice() {
-    }
-
-    @Test
-    void testSlice() {
-    }
-
-    @Test
     void isDeletedRow() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {

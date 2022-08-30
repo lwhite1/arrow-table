@@ -256,48 +256,47 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
         };
     }
 
+    /**
+     * Returns a Cursor allowing the user to read and modify the values in this table
+     *
+     * @return a MutableCursor providing access to this table
+     */
     public MutableCursor mutableCursor() {
         return new MutableCursor(this);
     }
 
+    /**
+     * Returns a Cursor allowing the user to read and modify the values in this table. Character reads and writes
+     * are performed using the given charset, unless a method with a Charset argument is used for a particular vector.
+     *
+     * @param defaultCharset    A charset to use as the default for reading any varchar data
+     * @return                  a MutableCursor providing access to this table
+     */
     public MutableCursor mutableCursor(Charset defaultCharset) {
         return new MutableCursor(this, defaultCharset);
     }
 
     /**
-     * Slice this table from desired index.
+     * Slice this table from desired index. Memory is NOT transferred from the vectors in this table to new vectors in
+     * the target table. This table is unchanged.
+     *
      * @param index start position of the slice
      * @return the sliced table
      */
-    @Override
     public MutableTable slice(int index) {
         return slice(index, this.rowCount - index);
     }
 
     /**
-     * Slice this table at desired index and length.
+     * Slice this table at desired index and length. Memory is NOT transferred from the vectors in this table to new
+     * vectors in the target table. This table is unchanged.
+     *
      * @param index start position of the slice
      * @param length length of the slice
      * @return the sliced table
      */
-    @Override
     public MutableTable slice(int index, int length) {
-        Preconditions.checkArgument(index >= 0, "expecting non-negative index");
-        Preconditions.checkArgument(length >= 0, "expecting non-negative length");
-        Preconditions.checkArgument(index + length <= rowCount,
-                "index + length should <= rowCount");
-
-        if (index == 0 && length == rowCount) {
-            return this;
-        }
-
-        List<FieldVector> sliceVectors = fieldVectors.stream().map(v -> {
-            TransferPair transferPair = v.getTransferPair(v.getAllocator());
-            transferPair.splitAndTransfer(index, length);
-            return (FieldVector) transferPair.getTo();
-        }).collect(Collectors.toList());
-
-        return new MutableTable(sliceVectors);
+        return (MutableTable) super.slice(index, length);
     }
 
     /**
