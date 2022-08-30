@@ -145,11 +145,16 @@ public class Table extends BaseTable implements Iterable<Cursor> {
 
     /**
      * Returns a MutableTable from the data in this table
-     * // TODO: Implement
      * @return a new MutableTable
      */
     @Override
     public MutableTable toMutableTable() {
-        return null;
+        return new MutableTable(
+                fieldVectors.stream().map(v -> {
+                    TransferPair transferPair = v.getTransferPair(v.getAllocator());
+                    transferPair.transfer();
+                    return (FieldVector) transferPair.getTo();
+                }).collect(Collectors.toList())
+        );
     }
 }

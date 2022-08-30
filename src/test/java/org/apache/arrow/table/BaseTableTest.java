@@ -4,6 +4,7 @@ import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
@@ -132,6 +133,15 @@ class BaseTableTest {
 
     @Test
     void toVectorSchemaRoot() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            assertNotNull(t.getVector(INT_VECTOR_NAME_1));
+            assertNotNull(t.getVector(INT_VECTOR_NAME_2));
+            VectorSchemaRoot vsr = t.toVectorSchemaRoot();
+            assertNotNull(vsr.getVector(INT_VECTOR_NAME_1));
+            assertNotNull(vsr.getVector(INT_VECTOR_NAME_2));
+            assertEquals(t.getSchema().findField(INT_VECTOR_NAME_1), vsr.getSchema().findField(INT_VECTOR_NAME_1));
+        }
     }
 
     @Test

@@ -173,10 +173,15 @@ public abstract class BaseTable implements AutoCloseable {
 
     /**
      * Returns a new VectorSchemaRoot with the data and schema from this table
-     * // TODO: Define the memory semantics of the copy and implement
      */
     public VectorSchemaRoot toVectorSchemaRoot() {
-        return null;
+        return new VectorSchemaRoot(
+                fieldVectors.stream().map(v -> {
+                    TransferPair transferPair = v.getTransferPair(v.getAllocator());
+                    transferPair.transfer();
+                    return (FieldVector) transferPair.getTo();
+                }).collect(Collectors.toList())
+        );
     }
 
     /**
