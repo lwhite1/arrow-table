@@ -1,6 +1,5 @@
 package org.apache.arrow.table;
 
-import org.apache.arrow.table.util.BasicTypeHelper;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VarCharVector;
@@ -281,34 +280,6 @@ public class MutableCursor extends Cursor {
             default:
                 throw new UnsupportedOperationException(buildErrorMessage("copy value", type));
         }
-    }
-
-
-    /**
-     * Creates a new ValueHolder for the given vector
-     * @param vector    The vector that needs a ValueHolder
-     * @return          The ValueHolder
-     */
-    ValueHolder createHolder(FieldVector vector) {
-        ValueHolder holder = BasicTypeHelper.createValueHolder(vector.getMinorType());
-        // TODO: set the holder's vector to the argument
-        return holder;
-    }
-
-    /**
-     * Returns the ValueHolder for the given vector. If no ValueHolder is available, a new one is constructed
-     * and placed in a map for future use before returning.
-     *
-     * @param vector    The FieldVector in need of a ValueHolder
-     * @return          The ValueHolder for the given vector
-     */
-    ValueHolder getHolder(FieldVector vector) {
-        ValueHolder holder = holderMap.get(vector);
-        if (holder == null) {
-            holder = createHolder(vector);
-            holderMap.put(vector, holder);
-        }
-        return holder;
     }
 
     /**
