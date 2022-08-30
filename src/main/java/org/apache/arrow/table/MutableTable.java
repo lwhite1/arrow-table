@@ -1,7 +1,6 @@
 package org.apache.arrow.table;
 
 import org.apache.arrow.memory.BufferAllocator;
-import org.apache.arrow.util.AutoCloseables;
 import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.ValueVector;
@@ -187,13 +186,20 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
     }
 
     /**
-     * Returns a Table from the data in this table
-     * // TODO: Implement
-     * @return a new Table
+     * Returns a Table from the data in this table. Memory is transferred to the new table so this mutable table
+     * should not be used any more
+     *
+     * @return a new Table containing the vectors in this table
      */
     @Override
     public Table toImmutableTable() {
-        return null;
+        return new Table(
+                fieldVectors.stream().map(v -> {
+                    TransferPair transferPair = v.getTransferPair(v.getAllocator());
+                    transferPair.transfer();
+                    return (FieldVector) transferPair.getTo();
+                }).collect(Collectors.toList())
+        );
     }
 
     @Override
@@ -208,7 +214,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
     public void setRowCount(int rowCount) {
         super.rowCount = rowCount;
 /*
-        Double check that this isn't wanted
+        TODO: Double check that this isn't wanted
         for (FieldVector v : fieldVectors) {
             v.setValueCount(rowCount);
         }

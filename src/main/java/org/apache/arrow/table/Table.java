@@ -5,6 +5,7 @@ import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.apache.arrow.vector.util.TransferPair;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,11 +38,18 @@ public class Table extends BaseTable implements Iterable<Cursor> {
 
     /**
      * Constructs a new instance containing the data from the argument.
+     * Memory used by the vectors in the VectorSchemaRoot is transferred to the table.
      *
      * @param vsr  The VectorSchemaRoot providing data for this Table
      */
     public Table(VectorSchemaRoot vsr) {
-        this(vsr.getSchema(), vsr.getFieldVectors(), vsr.getRowCount());
+        this(vsr.getSchema(),
+                vsr.getFieldVectors().stream().map(v -> {
+                    TransferPair transferPair = v.getTransferPair(v.getAllocator());
+                    transferPair.transfer();
+                    return (FieldVector) transferPair.getTo();
+                }).collect(Collectors.toList()),
+                vsr.getRowCount());
     }
 
     /**
