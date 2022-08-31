@@ -155,6 +155,11 @@ public abstract class BaseTable implements AutoCloseable {
         return fieldVectors.size();
     }
 
+    void clear() {
+        close();
+        rowCount = 0;
+    }
+
     @Override
     public void close() {
         try {
@@ -172,16 +177,21 @@ public abstract class BaseTable implements AutoCloseable {
     }
 
     /**
-     * Returns a new VectorSchemaRoot with the data and schema from this table
+     * Returns a new VectorSchemaRoot with the data and schema from this table. Data is transferred to the new
+     * VectorSchemaRoot, so this table is cleared and the rowCount is set to 0;
+     *
+     * @return a new VectorSchemaRoot
      */
     public VectorSchemaRoot toVectorSchemaRoot() {
-        return new VectorSchemaRoot(
+        VectorSchemaRoot vsr = new VectorSchemaRoot(
                 fieldVectors.stream().map(v -> {
                     TransferPair transferPair = v.getTransferPair(v.getAllocator());
                     transferPair.transfer();
                     return (FieldVector) transferPair.getTo();
                 }).collect(Collectors.toList())
         );
+        clear();
+        return vsr;
     }
 
     /**
