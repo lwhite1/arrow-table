@@ -6,15 +6,12 @@ import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.dictionary.Dictionary;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
-import org.apache.arrow.vector.holders.*;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
 import org.apache.arrow.vector.types.pojo.Field;
 
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * MutableCursor is a positionable, mutable cursor backed by a {@link MutableTable}.
@@ -29,11 +26,6 @@ public class MutableCursor extends Cursor {
      * DictionaryProvider for any Dictionary-encoded vectors in the Table. This may be null if no vectors are encoded
      */
     private DictionaryProvider dictionaryProvider;
-
-    /**
-     * A map of vectors to valueHolders
-     */
-    private final Map<FieldVector, ValueHolder> holderMap = new HashMap<>();
 
     /**
      * Constructs a new MutableCursor backed by the given table

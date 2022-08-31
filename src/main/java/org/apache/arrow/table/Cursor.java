@@ -372,26 +372,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
      */
-    public long getTimeStamp(String columnName) {
-        TimeStampVector vector = (TimeStampVector) table.getVector(columnName);
-        return vector.get(rowNumber);
-    }
-
-    /**
-     * Returns a long from the column with the given index at the current row. An IllegalStateException is
-     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
-     * has a different type
-     */
-    public long getTimeStamp(int columnIndex) {
-        TimeStampVector vector = (TimeStampVector) table.getVector(columnIndex);
-        return vector.get(rowNumber);
-    }
-
-    /**
-     * Returns a long from the column of the given name at the current row. An IllegalStateException is
-     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
-     * is present but has a different type
-     */
     public long getTimeStampSec(String columnName) {
         TimeStampSecVector vector = (TimeStampSecVector) table.getVector(columnName);
         return vector.get(rowNumber);
@@ -556,7 +536,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      */
     public String getVarChar(String columnName) {
         VarCharVector vector = (VarCharVector) table.getVector(columnName);
-
         return new String(vector.get(rowNumber), getDefaultCharacterSet());
     }
 
