@@ -261,9 +261,7 @@ public abstract class BaseTable implements AutoCloseable {
      * @param index start position of the slice
      * @return the sliced table
      */
-    public BaseTable slice(int index) {
-        return slice(index, this.rowCount - index);
-    }
+    public abstract BaseTable slice(int index);
 
     /**
      * Slice this table at desired index and length. Memory is NOT transferred from the vectors in this table to new
@@ -273,24 +271,7 @@ public abstract class BaseTable implements AutoCloseable {
      * @param length length of the slice
      * @return the sliced table
      */
-    public BaseTable slice(int index, int length) {
-        Preconditions.checkArgument(index >= 0, "expecting non-negative index");
-        Preconditions.checkArgument(length >= 0, "expecting non-negative length");
-        Preconditions.checkArgument(index + length <= rowCount,
-                "index + length should <= rowCount");
-
-        if (index == 0 && length == rowCount) {
-            return this;
-        }
-
-        List<FieldVector> sliceVectors = fieldVectors.stream().map(v -> {
-            TransferPair transferPair = v.getTransferPair(v.getAllocator());
-            transferPair.splitAndTransfer(index, length);
-            return (FieldVector) transferPair.getTo();
-        }).collect(Collectors.toList());
-
-        return new MutableTable(sliceVectors);
-    }
+    public abstract BaseTable slice(int index, int length);
 
     /**
      * Returns true if the row at the given index has been deleted and false otherwise

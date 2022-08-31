@@ -2,6 +2,7 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.dictionary.Dictionary;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
@@ -147,6 +148,20 @@ public class MutableCursor extends Cursor {
      */
     public MutableCursor setInt(String columnName, int value) {
         IntVector v = (IntVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is * thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setUInt4(String columnName, int value) {
+        UInt4Vector v = (UInt4Vector) table.getVector(columnName);
         v.setSafe(getRowNumber(), value);
         return this;
     }

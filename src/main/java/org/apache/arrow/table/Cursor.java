@@ -102,7 +102,7 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * thrown if the column is not present and an IllegalArgumentException is thrown if it
      * has a different type
      */
-    public int getUnit4(int columnIndex) {
+    public int getUInt4(int columnIndex) {
         UInt4Vector vector = (UInt4Vector) table.getVector(columnIndex);
         return vector.get(rowNumber);
     }

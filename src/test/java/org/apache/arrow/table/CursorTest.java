@@ -15,8 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.arrow.table.TestUtils.INT_VECTOR_NAME_1;
-import static org.apache.arrow.table.TestUtils.twoIntColumns;
+import static org.apache.arrow.table.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CursorTest {
@@ -119,6 +118,39 @@ class CursorTest {
             Cursor c = t.immutableCursor();
             c.at(1);
             assertFalse(c.isNull(INT_VECTOR_NAME_1));
+        }
+    }
+
+    @Test
+    void fixedWidthVectorTest() {
+        List<FieldVector> vectorList = fixedWidthVectors(allocator, 2);
+        try (Table t = new Table(vectorList)) {
+            Cursor c = t.immutableCursor();
+            c.at(1);
+            assertFalse(c.isNull("bigInt_vector"));
+            assertEquals(c.getInt("int_vector"), c.getInt(0));
+            assertEquals(c.getBigInt("bigInt_vector"), c.getBigInt(1));
+            assertEquals(c.getSmallInt("smallInt_vector"), c.getSmallInt(2));
+            assertEquals(c.getTinyInt("tinyInt_vector"), c.getTinyInt(3));
+
+            // TODO: Uncomment these when GenerateSampleData supports UInts
+            //assertEquals(c.getUInt1("uInt1_vector"), c.getUInt1(0));
+            //assertEquals(c.getUInt2("uInt2_vector"), c.getUInt2(1));
+            //assertEquals(c.getUInt4("uInt4_vector"), c.getUInt4(2));
+            //assertEquals(c.getUInt8("uInt8_vector"), c.getUInt8(3));
+
+            assertEquals(c.getFloat4("float4_vector"), c.getFloat4(8));
+            assertEquals(c.getFloat8("float8_vector"), c.getFloat8(9));
+
+            assertEquals(c.getTimeSec("timeSec_vector"), c.getTimeSec(10));
+            assertEquals(c.getTimeMilli("timeMilli_vector"), c.getTimeMilli(11));
+            assertEquals(c.getTimeMicro("timeMicro_vector"), c.getTimeMicro(12));
+            assertEquals(c.getTimeNano("timeNano_vector"), c.getTimeNano(13));
+
+            assertEquals(c.getTimeStampSec("timeStampSec_vector"), c.getTimeStampSec(14));
+            assertEquals(c.getTimeStampMilli("timeStampMilli_vector"), c.getTimeStampMilli(15));
+            assertEquals(c.getTimeStampMicro("timeStampMicro_vector"), c.getTimeStampMicro(16));
+            assertEquals(c.getTimeStampNano("timeStampNano_vector"), c.getTimeStampNano(17));
         }
     }
 }

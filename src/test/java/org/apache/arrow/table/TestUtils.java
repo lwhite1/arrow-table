@@ -1,9 +1,7 @@
 package org.apache.arrow.table;
 
 import org.apache.arrow.memory.BufferAllocator;
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.*;
 import org.junit.platform.commons.util.Preconditions;
 
 import java.util.ArrayList;
@@ -62,4 +60,48 @@ public class TestUtils {
         return vectorList;
     }
 
+    static List<FieldVector> fixedWidthVectors(BufferAllocator allocator, int rowCount) {
+        List<FieldVector> vectors = new ArrayList<>();
+        numericVectors(vectors, allocator, rowCount);
+        return simpleTemporalVectors(vectors, allocator, rowCount);
+    }
+
+    static List<FieldVector> numericVectors(List<FieldVector> vectors, BufferAllocator allocator, int rowCount) {
+        vectors.add(new IntVector("int_vector", allocator));
+        vectors.add(new BigIntVector("bigInt_vector", allocator));
+        vectors.add(new SmallIntVector("smallInt_vector", allocator));
+        vectors.add(new TinyIntVector("tinyInt_vector", allocator));
+        vectors.add(new UInt1Vector("uInt1_vector", allocator));
+        vectors.add(new UInt2Vector("uInt2_vector", allocator));
+        vectors.add(new UInt4Vector("uInt4_vector", allocator));
+        vectors.add(new UInt8Vector("uInt8_vector", allocator));
+        vectors.add(new Float4Vector("float4_vector", allocator));
+        vectors.add(new Float8Vector("float8_vector", allocator));
+        vectors.forEach(vec -> GenerateSampleData.generateTestData(vec, rowCount));
+        return vectors;
+    }
+
+    static List<FieldVector> numericVectors(BufferAllocator allocator, int rowCount) {
+        List<FieldVector> vectors = new ArrayList<>();
+        return numericVectors(vectors, allocator, rowCount);
+    }
+
+    static List<FieldVector> simpleTemporalVectors(List<FieldVector> vectors, BufferAllocator allocator, int rowCount) {
+        vectors.add(new TimeSecVector("timeSec_vector", allocator));
+        vectors.add(new TimeMilliVector("timeMilli_vector", allocator));
+        vectors.add(new TimeMicroVector("timeMicro_vector", allocator));
+        vectors.add(new TimeNanoVector("timeNano_vector", allocator));
+
+        vectors.add(new TimeStampSecVector("timeStampSec_vector", allocator));
+        vectors.add(new TimeStampMilliVector("timeStampMilli_vector", allocator));
+        vectors.add(new TimeStampMicroVector("timeStampMicro_vector", allocator));
+        vectors.add(new TimeStampNanoVector("timeStampNano_vector", allocator));
+
+        vectors.forEach(vec -> GenerateSampleData.generateTestData(vec, rowCount));
+        return vectors;
+    }
+    static List<FieldVector> simpleTemporalVectors(BufferAllocator allocator, int rowCount) {
+        List<FieldVector> vectors = new ArrayList<>();
+        return simpleTemporalVectors(vectors, allocator, rowCount);
+    }
 }

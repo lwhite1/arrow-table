@@ -1,5 +1,6 @@
 package org.apache.arrow.table;
 
+import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
@@ -142,7 +143,7 @@ public class Table extends BaseTable implements Iterable<Cursor> {
      * @return the sliced table
      */
     public Table slice(int index) {
-        return (Table) super.slice(index);
+        return slice(index, this.rowCount - index);
     }
 
     /**
@@ -154,7 +155,22 @@ public class Table extends BaseTable implements Iterable<Cursor> {
      * @return the sliced table
      */
     public Table slice(int index, int length) {
-        return (Table) super.slice(index, length);
+        Preconditions.checkArgument(index >= 0, "expecting non-negative index");
+        Preconditions.checkArgument(length >= 0, "expecting non-negative length");
+        Preconditions.checkArgument(index + length <= rowCount,
+                "index + length should <= rowCount");
+
+        if (index == 0 && length == rowCount) {
+            return this;
+        }
+
+        List<FieldVector> sliceVectors = fieldVectors.stream().map(v -> {
+            TransferPair transferPair = v.getTransferPair(v.getAllocator());
+            transferPair.splitAndTransfer(index, length);
+            return (FieldVector) transferPair.getTo();
+        }).collect(Collectors.toList());
+
+        return new Table(sliceVectors);
     }
 
     /**

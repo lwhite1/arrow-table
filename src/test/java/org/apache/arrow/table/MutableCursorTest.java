@@ -105,6 +105,18 @@ class MutableCursorTest {
     }
 
     @Test
+    void setUInt4ByColumnName() {
+        List<FieldVector> vectorList = numericVectors(allocator, 2);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            c.setUInt4("uInt4_vector", 132);
+            int result = c.getUInt4("uInt4_vector");
+            assertEquals(132, result);
+        }
+    }
+
+    @Test
     void setVarCharByColumnIndex() {
         List<FieldVector> vectorList = intPlusVarcharColumns(allocator);
         try (MutableTable t = new MutableTable(vectorList)) {
