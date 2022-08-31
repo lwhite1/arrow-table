@@ -1,15 +1,17 @@
 # Table
  
-Table (and MutableTable) are tabular data structures backed by Arrow arrays. They are similar to VectorSchemaRoot, 
+NOTE: This module is experimental and subject to change.
+
+Table and MutableTable are tabular data structures backed by Arrow arrays. They are similar to VectorSchemaRoot, 
 but lack its support for batch operations. They also differ considerably in how array values are set.
 
 ## Mutation semantics
 
 _Table_ is (almost) entirely immutable. The underlying vectors are not exposed. The only way they could be modified is 
-by keeping a reference to the arrays and updating those outside of the Table class. 
+by keeping a reference to the arrays and updating those outside of the Table class, which is unsafe and should be avoided. 
 
 _MutableTable_, on the other hand, has more general mutation support than VectorSchemaRoot. Values of any ArrowType can be modified at any time and in any order. 
-However, because it is ultimately backed by Arrow arrays, the mutation process may be relatively complex and less efficient 
+However, because it is ultimately backed by Arrow arrays, the mutation process may be complex and less efficient 
 than might be desired. Mutation is described in more detail below in the _Write Operations_ section.
 
 ## What's in a Table?

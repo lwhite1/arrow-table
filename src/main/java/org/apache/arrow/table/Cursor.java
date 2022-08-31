@@ -468,6 +468,86 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public long getTimeStampMilli(String columnName) {
+        TimeStampMilliVector vector = (TimeStampMilliVector) table.getVector(columnName);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public long getTimeStampMilli(int columnIndex) {
+        TimeStampMilliVector vector = (TimeStampMilliVector) table.getVector(columnIndex);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public long getTimeStampMilliTZ(String columnName) {
+        TimeStampMilliTZVector vector = (TimeStampMilliTZVector) table.getVector(columnName);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public long getTimeStampMilliTZ(int columnIndex) {
+        TimeStampMilliTZVector vector = (TimeStampMilliTZVector) table.getVector(columnIndex);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public long getTimeStampMicro(String columnName) {
+        TimeStampMicroVector vector = (TimeStampMicroVector) table.getVector(columnName);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public long getTimeStampMicro(int columnIndex) {
+        TimeStampMicroVector vector = (TimeStampMicroVector) table.getVector(columnIndex);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public long getTimeStampMicroTZ(String columnName) {
+        TimeStampMicroTZVector vector = (TimeStampMicroTZVector) table.getVector(columnName);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public long getTimeStampMicroTZ(int columnIndex) {
+        TimeStampMicroTZVector vector = (TimeStampMicroTZVector) table.getVector(columnIndex);
+        return vector.get(rowNumber);
+    }
+
+    /**
      * Returns a String from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
      * has a different type
