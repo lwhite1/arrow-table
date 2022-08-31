@@ -231,6 +231,26 @@ class MutableTableTest {
         }
     }
 
+    /**
+     * Tests creation of a table from multiple vectorSchemaRoots
+     */
+    @Test
+    void concatenateVsr() {
+        List<FieldVector> vectorList1 = twoIntColumns(allocator);
+        List<FieldVector> vectorList2 = twoIntColumns(allocator);
+        try (
+                VectorSchemaRoot vsr = new VectorSchemaRoot(vectorList1);
+                VectorSchemaRoot vsr2 = new VectorSchemaRoot(vectorList2);
+        ) {
+            List<VectorSchemaRoot> roots = new ArrayList<>();
+            roots.add(vsr);
+            roots.add(vsr2);
+            MutableTable table = MutableTable.concatenate(allocator, roots);
+            assertEquals(4, table.rowCount);
+            table.close();
+        }
+    }
+
     @Test
     void iterator() {
         try (MutableTable t = MutableTable.create(schema1, allocator)) {

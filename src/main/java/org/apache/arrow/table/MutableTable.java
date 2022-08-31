@@ -18,6 +18,13 @@ import java.util.stream.StreamSupport;
 /**
  * MutableTable is a mutable tabular data structure for static or interactive use.
  * See {@link org.apache.arrow.vector.VectorSchemaRoot} for batch processing use cases
+ *
+ * TODO:
+ *      Add a concatenate method that takes Table arguments
+ *      Add a method that concatenates a VSR to an existing Table
+ *      Extend the concatenate method here to immutable Table
+ *      Consider adjusting the memory handling of the concatenate methods
+ *      Consider removing the constructors that share memory with externally constructed vectors
  */
 public class MutableTable extends BaseTable implements AutoCloseable, Iterable<MutableCursor> {
 
@@ -143,6 +150,68 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      */
     public static MutableTable of(FieldVector... vectors) {
         return new MutableTable(Arrays.stream(vectors).collect(Collectors.toList()));
+    }
+
+    /**
+     * Returns a new Table made by concatenating a number of VectorSchemaRoots with the same schema
+     *
+     * @param roots the VectorSchemaRoots to concatenate
+     */
+    public static MutableTable concatenate(BufferAllocator allocator, List<VectorSchemaRoot> roots) {
+        assert roots.size() > 0;
+        Schema firstSchema = roots.get(0).getSchema();
+        int totalRowCount = 0;
+        for (VectorSchemaRoot root : roots) {
+            if (!root.getSchema().equals(firstSchema))
+                throw new IllegalArgumentException("All tables must have the same schema");
+            totalRowCount += root.getRowCount();
+        }
+
+        final int finalTotalRowCount = totalRowCount;
+        FieldVector[] newVectors = roots.get(0).getFieldVectors().stream()
+                .map(vec -> {
+                    FieldVector newVector = (FieldVector) vec.getTransferPair(allocator).getTo();
+                    newVector.setInitialCapacity(finalTotalRowCount);
+                    newVector.allocateNew();
+                    newVector.setValueCount(finalTotalRowCount);
+                    return newVector;
+                })
+                .toArray(FieldVector[]::new);
+
+        int offset = 0;
+        for (VectorSchemaRoot root : roots) {
+            int rowCount = root.getRowCount();
+            for (int i = 0; i < newVectors.length; i++) {
+                FieldVector oldVector = root.getVector(i);
+                retryCopyFrom(newVectors[i], oldVector, 0, rowCount, offset);
+            }
+            offset += rowCount;
+        }
+        return MutableTable.of(newVectors);
+    }
+
+    /**
+     * Instead of using copyFromSafe, which checks for memory on each write,
+     * this tries to copy over the entire vector and retry if it fails.
+     *
+     * @param newVector the vector to copy to
+     * @param oldVector the vector to copy from
+     * @param oldStart the starting index in the old vector
+     * @param oldEnd the ending index in the old vector
+     * @param newStart the starting index in the new vector
+     */
+    private static void retryCopyFrom(ValueVector newVector, ValueVector oldVector, int oldStart, int oldEnd, int newStart) {
+        while (true) {
+            try {
+                for (int i = oldStart; i < oldEnd; i++) {
+                    newVector.copyFrom(i, i - oldStart + newStart, oldVector);
+                }
+                break;
+            }
+            catch (IndexOutOfBoundsException err) {
+                newVector.reAlloc();
+            }
+        }
     }
 
     /**
