@@ -139,4 +139,46 @@ class TableTest {
             assertEquals(t.getSchema().findField(INT_VECTOR_NAME_1), mutableTable.getSchema().findField(INT_VECTOR_NAME_1));
         }
     }
+
+    /**
+     * Tests a slice operation where no length is provided, so the range extends to the end of the table
+     */
+    @Test
+    void sliceToEnd() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            Table slice = t.slice(1);
+            assertEquals(1, slice.rowCount);
+            assertEquals(2, t.rowCount); // memory is copied for slice, not transferred
+            slice.close();
+        }
+    }
+
+    /**
+     * Tests a slice operation with a given length parameter
+     */
+    @Test
+    void sliceRange() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (Table t = new Table(vectorList)) {
+            Table slice = t.slice(1, 1);
+            assertEquals(1, slice.rowCount);
+            assertEquals(2, t.rowCount); // memory is copied for slice, not transferred
+            slice.close();
+        }
+    }
+
+    /**
+     * Tests creation of a table from a vectorSchemaRoot
+     */
+    @Test
+    void constructFromVsr() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (VectorSchemaRoot vsr = new VectorSchemaRoot(vectorList)) {
+            Table t = Table.of(vsr);
+            assertEquals(2, t.rowCount);
+            assertEquals(0, vsr.getRowCount()); // memory is copied for slice, not transferred
+            t.close();
+        }
+    }
 }

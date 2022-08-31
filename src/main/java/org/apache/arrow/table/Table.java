@@ -37,19 +37,38 @@ public class Table extends BaseTable implements Iterable<Cursor> {
     }
 
     /**
-     * Constructs a new instance containing the data from the argument.
-     * Memory used by the vectors in the VectorSchemaRoot is transferred to the table.
+     * Constructs a new instance containing the data from the argument. Vectors are shared
+     * between the Table and VectorSchemaRoot. Direct modification of those vectors
+     * is unsafe and should be avoided.
+     *
+     * @see Table#of(VectorSchemaRoot) for an alternative without data sharing
      *
      * @param vsr  The VectorSchemaRoot providing data for this Table
      */
     public Table(VectorSchemaRoot vsr) {
-        this(vsr.getSchema(),
+        this(vsr.getSchema(), vsr.getFieldVectors(), vsr.getRowCount());
+    }
+
+    /**
+     * Constructs a new instance containing the data from the argument. The VectorSchemaRoot
+     * is cleared in the process and its rowCount is set to 0. Memory used by the vectors
+     * in the VectorSchemaRoot is transferred to the table.
+     *
+     * @see Table#Table(VectorSchemaRoot) for an alternative where data is shared with the
+     * VectorSchemaRoot
+     *
+     * @param vsr  The VectorSchemaRoot providing data for this Table
+     */
+    public static Table of(VectorSchemaRoot vsr) {
+        Table table = new Table(vsr.getSchema(),
                 vsr.getFieldVectors().stream().map(v -> {
                     TransferPair transferPair = v.getTransferPair(v.getAllocator());
                     transferPair.transfer();
                     return (FieldVector) transferPair.getTo();
                 }).collect(Collectors.toList()),
                 vsr.getRowCount());
+                vsr.clear();
+        return table;
     }
 
     /**

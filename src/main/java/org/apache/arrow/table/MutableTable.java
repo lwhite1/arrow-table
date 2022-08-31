@@ -1,7 +1,6 @@
 package org.apache.arrow.table;
 
 import org.apache.arrow.memory.BufferAllocator;
-import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
@@ -115,6 +114,28 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
                     fieldVectors.size() + " expected " + schema.getFields().size());
         }
         return new MutableTable(schema, fieldVectors, 0);
+    }
+
+    /**
+     * Constructs a new instance containing the data from the argument. The VectorSchemaRoot
+     * is cleared in the process and its rowCount is set to 0. Memory used by the vectors
+     * in the VectorSchemaRoot is transferred to the table.
+     *
+     * @see MutableTable#MutableTable(VectorSchemaRoot) for an alternative where data is shared with the
+     * VectorSchemaRoot
+     *
+     * @param vsr  The VectorSchemaRoot providing data for this Table
+     */
+    public static MutableTable of(VectorSchemaRoot vsr) {
+        MutableTable table = new MutableTable(vsr.getSchema(),
+                vsr.getFieldVectors().stream().map(v -> {
+                    TransferPair transferPair = v.getTransferPair(v.getAllocator());
+                    transferPair.transfer();
+                    return (FieldVector) transferPair.getTo();
+                }).collect(Collectors.toList()),
+                vsr.getRowCount());
+        vsr.clear();
+        return table;
     }
 
     /**

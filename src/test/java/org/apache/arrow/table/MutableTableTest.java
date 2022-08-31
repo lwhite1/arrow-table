@@ -217,6 +217,20 @@ class MutableTableTest {
         }
     }
 
+    /**
+     * Tests creation of a table from a vectorSchemaRoot
+     */
+    @Test
+    void constructFromVsr() {
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (VectorSchemaRoot vsr = new VectorSchemaRoot(vectorList)) {
+            MutableTable table = MutableTable.of(vsr);
+            assertEquals(2, table.rowCount);
+            assertEquals(0, vsr.getRowCount()); // memory is copied for slice, not transferred
+            table.close();
+        }
+    }
+
     @Test
     void iterator() {
         try (MutableTable t = MutableTable.create(schema1, allocator)) {
@@ -234,6 +248,4 @@ class MutableTableTest {
             assertTrue(values.containsAll(List.of(1, 2, 3)));
         }
     }
-
-
 }
