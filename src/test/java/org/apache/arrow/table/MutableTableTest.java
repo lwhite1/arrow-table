@@ -93,10 +93,10 @@ class MutableTableTest {
         try (MutableTable t = new MutableTable(vectorList)) {
             MutableCursor c = t.mutableCursor();
             c.at(0);
-            assertFalse(c.isDeletedRow());
+            assertFalse(c.isRowDeleted());
             c.deleteCurrentRow();
-            assertTrue(c.isDeletedRow());
-            assertTrue(t.isDeletedRow(0));
+            assertTrue(c.isRowDeleted());
+            assertTrue(t.isRowDeleted(0));
             t.compact();
             assertEquals(0, t.deletedRowCount());
             assertEquals(1, t.rowCount);
@@ -130,7 +130,7 @@ class MutableTableTest {
             t.setRowCount(3);
             MutableCursor c = t.mutableCursor();
             c.at(1).deleteCurrentRow();
-            assertTrue(t.isDeletedRow(1));
+            assertTrue(t.isRowDeleted(1));
 
             c.at(-1);
             List<Integer> values = new ArrayList<>();
@@ -224,7 +224,7 @@ class MutableTableTest {
     void constructFromVsr() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (VectorSchemaRoot vsr = new VectorSchemaRoot(vectorList)) {
-            MutableTable table = MutableTable.of(vsr);
+            MutableTable table = MutableTable.from(vsr);
             assertEquals(2, table.rowCount);
             assertEquals(0, vsr.getRowCount()); // memory is copied for slice, not transferred
             table.close();

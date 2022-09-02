@@ -42,7 +42,7 @@ public class Table extends BaseTable implements Iterable<Cursor> {
      * between the Table and VectorSchemaRoot. Direct modification of those vectors
      * is unsafe and should be avoided.
      *
-     * @see Table#of(VectorSchemaRoot) for an alternative without data sharing (preferred)
+     * @see Table#from(VectorSchemaRoot) for an alternative without data sharing (preferred)
      *
      * @param vsr  The VectorSchemaRoot providing data for this Table
      */
@@ -60,7 +60,7 @@ public class Table extends BaseTable implements Iterable<Cursor> {
      *
      * @param vsr  The VectorSchemaRoot providing data for this Table
      */
-    public static Table of(VectorSchemaRoot vsr) {
+    public static Table from(VectorSchemaRoot vsr) {
         Table table = new Table(vsr.getSchema(),
                 vsr.getFieldVectors().stream().map(v -> {
                     TransferPair transferPair = v.getTransferPair(v.getAllocator());

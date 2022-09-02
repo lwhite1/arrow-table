@@ -1,24 +1,201 @@
+
+
 # Table
- 
-NOTE: This module is experimental and subject to change.
+
+**NOTE**: The API described in this document is experimental and subject to change.
 
 Table and MutableTable are tabular data structures backed by Arrow arrays. They are similar to VectorSchemaRoot, 
-but lack its support for batch operations. They also differ considerably in how array values are set.
+but lack its support for batch operations. They also differ considerably in terms of their mutation semantics.
 
 ## Mutation semantics
 
-_Table_ is (almost) entirely immutable. The underlying vectors are not exposed. The only way they could be modified is 
-by keeping a reference to the arrays and updating those outside of the Table class, which is unsafe and should be avoided. 
+_Table_ is (almost) entirely immutable. The underlying vectors are not exposed. They can only be modified by keeping a reference to the arrays that are passed to the Table constructor, and updating those outside of the Table class, which is unsafe and should be avoided. 
 
-_MutableTable_, on the other hand, has more general mutation support than VectorSchemaRoot. Values of any ArrowType can be modified at any time and in any order. 
-However, because it is ultimately backed by Arrow arrays, the mutation process may be complex and less efficient 
-than might be desired. Mutation is described in more detail below in the _Write Operations_ section.
+_MutableTable_, on the other hand, has more general mutation support than VectorSchemaRoot. Values of any ArrowType can be modified at any time and in any order. However, because it is ultimately backed by Arrow arrays, the mutation process may be complex and less efficient than might be desired. Mutation is described in more detail below in the _Write Operations_ section.
 
 ## What's in a Table?
 Both Table and MutableTable consist largely of a Schema and a collection of FieldVector objects. 
 
 ## Creating a Table
 
+The preferred way to create a Table is from a VectorSchemaRoot using the static method *from()*. This method transfers the data from the VectorSchemaRoot to the new Table, clearing the VectorSchemaRoot in the process. The benefit of this approach is that you can trust that the data in your new Table is never changed. An example is provided below:
+
+```java
+VectorSchemaRoot vsr = myMethodForGettingVsrs(); 
+Table t = Table.from(vsr);
+```
+
+To create a MutableTable, a similar method is provided:
+
+```java
+VectorSchemaRoot vsr = myMethodForGettingVsrs(); 
+MutableTable t = MutableTable.from(vsr);
+```
+
+MutableTables don't provide the benefits of immutability of course, but they do provide a more general and safer approach to mutability as described below. 
+
+## Row operations
+
+Row-based access is supported using a Cursor object. Cursor provides *get()* operations by both vector name and vector position, but no *set()* operations. A MutableCursor provides both *set()* and *get()* operations. If you are working with a MutableTable, you can use either a MutableCursor or an immutable Cursor to access the data.
+
+### Getting a cursor
+
+Call `Table#immutableCursor` to get a cursor supporting only read operations.
+
+```java
+Cursor c = table.immutableCursor(); 
+```
+
+This works for either mutable or immutable tables. If your table is a MutableTable, you can get a cursor that can be used to write to the table using the `Table#mutableCursor()` method:
+
+```java
+MutableCursor mc = mutableTable.mutableCursor(); 
+```
+
+### Getting around
+
+Cursors are usually iterated in the order of the underlying data vectors, but they are also positionable, so you can skip to a specific row. Row numbers are 0-based. 
+
+```java
+Cursor c = table.immutableCursor(); 
+int age101 = c.at(101) // change position directly to 101
+```
+
+Since cursors are itearble, you can traverse a table using a standard while loop:
+
+```java
+Cursor c = table.immutableCursor(); 
+while (c.hasNext()) {
+  c.next();
+  // do something useful here
+}
+```
+
+Table implements `Iterable<Cursor>` so you can access rows in an enhanced *for* loop:
+
+```java
+for (Cursor row: table) {
+  int age = row.get("age");
+  boolean nameIsNull = row.isNull("name");
+  ... 
+}
+```
+
+### Read operations
+
+```java
+Cursor c = table.immutableCursor(); 
+int age101 = c.get("age");
+boolean name101isNull = c.isNull("name");
+int row = c.getRowNumber(); // 101
+```
+
+### Write operations
+
+A MutableTables can be modified through its MutableCursor. You can:
+
+- append records
+- update values in any row
+- delete any row
+
+These operations can be performed at any time and in any order. 
+
+Because MutableCursor also implements the public API for Cursor, the *get()* methods are available, and the read and write operations can be interleaved arbitrarily. For example:
+
+```java
+MutableCursor c = mutableTable.mutableCursor();
+while (c.hasNext()) {
+  c.next();
+  if (!c.isNull()) {             // a read operation
+    if (c.getInt("age") >= 18) { // another read operation
+        c.setNull("chaparone")   // some write operations
+            .setVarChar("status", "adult");
+    }
+  }
+}
+```
+
+As you can see in the above example:
+
+- You can check for null values using *isNull()*
+- You can set a value to null using *setNull()*
+- You can get a value using *get...()*
+- You can set a value using *set...()*
+
+You must specifiy which column to operate on. You can specifiy a column using its position in the table or its name. When you get or set any non-null value, you must also specify the type of vector you're working with as part of the method name, for example `getVarChar()`. The type portion of the name will match the vector's type, so that you would use *getInt()* to get a value from an IntVector, *getUInt8()* to get a long value from a UInt8Vector (an unsigned 8 byte integer vector), and *getVarChar()* to get a String value from a VarCharVector. 
+
+All accessor methods return the cursor itself so they can be chained together. 
+
+#### How mutation works
+
+##### Deletions
+
+To delete a row, set the cursor to the row that you want deleted and call 'MutableCursor#deleteCurrentRow()'. To delete all the even-numbered rows in a MutableTable, for example, you could do this: 
+
+```java
+for (MutableCursor row: mutableTable) {
+  if (row.getRowNumber() % 2 == 0) {
+    row.deleteCurrentRow(); 
+  }
+}
+```
+
+Deletions are performed virtually. The row to be deleted is marked as such, but remains in the table until compaction occurs. The number of deleted records is available using `Table#deletedRowCount()`. This may be useful in deciding when to compact. Once a row is marked as deleted, it is skipped on subsequent iterations, but it can be accessed using `MutableTable#at(rowIndex)`. The following code checks whether a row is deleted: 
+
+```java
+MutableCursor mc = mutableTable.mutableCursor();
+mc.at(140); // positions the cursor at row 140
+if (!mc.isDeletedRow()) {
+  mc.deleteCurrentRow();
+}
+```
+
+Note that extreme care must be taken when undo-ing deletes in the case where updates are involved. See the section on updates for more information. 
+
+###### Compaction
+
+The compaction process removes any rows marked for deletion. To perform compaction, simply call the compact() method:
+
+```java
+int deleted = oldTable.deletedRowCount(); 
+oldTable.compact();
+int newDeleted = oldTable.deletedRowCount(); // the deleted row count is now 0
+```
+
+**NOTE**: Compaction may be an expensive process as it involves moving the values in every vector: When compact() is called, the values in each vector are scanned, and once the first deleted row is found, each subsequent value must be moved "up" in the table to fill-in the space previously alloted to the deleted row value(s). 
+
+##### Updates
+
+Updates are performed using *set()* methods.
+
+There are two ways that updates are handled. They are done in place whenever possible. For example, updates to any fixed-width vector are always performed in-place. Otherwise, they are performed by deleting the original row, and appending a new copy of that row with the value changed.
+
+Please note that setting two variable-width vectors in a single row (see below) may result in multiple deletions and insertions.
+
+```java
+mutableCursor.setVarChar("first_name", "John")
+    .setVarChar("last_name", "Doe");
+```
+
+###### Updating dictionary-encoded fields
+
+Updates to dictionary-encoded fields may be more efficient....
+
+***TODO: write this section when code is available***
+
+###### Performing multiple updates in one pass
+
+Using Holders it may be possible....
+
+***TODO: write this section when code is available***
+
+##### Appending new rows
+
+***TODO: write this section when code is available***
+
+##### Limitations and unsupported operations
+
+Table does not currently support insertAt(index, value) operations, nor does it guarantee that row order remains consistent after update operations.  Both of these operations would be useful for anyone building an Arrow-native dataframe. 
 
 ## Converting to a VectorSchemaRoot
 
@@ -26,54 +203,41 @@ Both Table and MutableTable consist largely of a Schema and a collection of Fiel
 VectorSchemaRoot root = myTable.toVectorSchemaRoot();
 ```
 
-## Row operations
+## Working with the Streaming API and the C-Data interface
 
-Row operations are performed using a Cursor object. There are two types: MutableCursor and Immutable Cursor.
-ImmutableCursor provides get operations by both vector name and vector position.
+The ability to work with native code is required for many Arrow features. This section describes how tables can be be exported and imported using two mechanisms.
 
-### Read operations
-```java
-ImmutableCursor c = table.immutableCursor(); 
-int age101 = c.at(101) // change position directly to 101
-                .get("age");
-boolean ageIsNull = c.isNull();
-```
+### Using the Streaming API with Tables
 
-### Write operations
 
-Table supports read, update, append, and delete operations through its MutableCursor. To get a mutable cursor, 
-you ask the table:
-```java
-MutableCursor c = table.mutableCursor();
-```
-MutableCursor also implements the public API for Cursor, so the accessor methods are available. For example:
+
+### Using the C-Data interface with Tables
+
+Currently, Table usage of the C-Data interface is mediated by VectorSchemaRoot. The following example shows a Table being exported and re-imported using the C-Data interface API for VectorSchemaRoot. 
+
+***TODO: Consider (future?) direct C-Data support***
+
+One concern with this approach is that using VectorSchemaRoot as an itermediary means that the static method `Table.from(VectorSchemaRoot)` cannot be used to transfer the memory from the VSR, so that it would be possible to directly access the vectors inside the 'immutable' table. (This is in-part because the implementation of CdataReferenceManager does not support the transfer operation.) Furthermore, the Table constructor new Table(VectorSchemaRoot), which creates a table that shares memory with the given VSR cannot be removed, meaning that it may be used for other use-cases where a truly immutable table is desirable. Finally, the need to go through a VSR makes it less obvious how the import export process should be performed and makes the API a bit more complex.
 
 ```java
-MutableCursor c = table.mutableCursor();
-while (c.hasNext()){
-    if(c.getInt("age") >= 18) {
-        c.setNull("chaparone")
-            .setVarChar("status", "adult");
+VectorSchemaRoot importedRoot;
+Table importedTable;
+try (Table t = new Table(vectorList);
+     VectorSchemaRoot root = t.toVectorSchemaRoot()) {
+           
+  // Consumer allocates empty structures
+  try (ArrowSchema consumerSchema = ArrowSchema.allocateNew(allocator);
+       ArrowArray consumerArray = ArrowArray.allocateNew(allocator)) {
+    // Producer creates structures from existing memory pointers
+    try (ArrowSchema arrowSchema = ArrowSchema.wrap(consumerSchema.memoryAddress());
+         ArrowArray arrowArray = ArrowArray.wrap(consumerArray.memoryAddress())) {
+      // Producer exports vector into the C Data Interface structures
+      Data.exportVectorSchemaRoot(allocator, root, null, arrowArray, arrowSchema);
     }
+    // Consumer imports vector
+    importedRoot = Data.importVectorSchemaRoot(allocator, consumerArray, consumerSchema, null);
+    importedTable = new Table(importedRoot);
+  }
 }
 ```
 
-
-## Mutability semantics
-In contrast to VectorSchemaRoot, Table's mutability semantics are straightforward. You can:
-- append records
-- update any row
-- delete any row
-
-at any time. Table does not currently support insertAt(index, value) operations, nor does it guarantee that row order remains consistent after update operations. 
-
-There are two ways that updates are handled. They are done in place whenever possible. Otherwise, they are performed by deleting the original row, and appending a new copy of that row with the value changed.
-
-Deletions (including deletions that occur in performing updates) are done virtually. The row to be deleted is marked as such, but remains in the table until compaction occurs. The number of deleted records is also available using Table#getDeletedCount(). This can be useful in determining when to compact.
-
-### Compaction
-The compaction process removes any rows marked for deletion. To perform compaction, simply call the compact() method:
-```java
-int deleted = oldTable.getDeletedCount(); 
-Table compacted = oldTable.compact();
-```

@@ -112,8 +112,8 @@ public class MutableCursor extends Cursor {
     /**
      * Returns true if the current row is marked as deleted and false otherwise
      */
-    public boolean isDeletedRow() {
-        return table.isDeletedRow(getRowNumber());
+    public boolean isRowDeleted() {
+        return table.isRowDeleted(getRowNumber());
     }
 
     /**
@@ -337,7 +337,7 @@ public class MutableCursor extends Cursor {
         int writePosition = 0;
         while(hasNext()) {
             next();
-            while (isDeletedRow()) {
+            while (isRowDeleted()) {
                 next();
             }
             if (writePosition != rowNumber) {

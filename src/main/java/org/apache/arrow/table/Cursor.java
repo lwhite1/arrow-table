@@ -635,6 +635,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     private boolean rowIsDeleted(int rowNumber) {
-        return table.isDeletedRow(rowNumber);
+        return table.isRowDeleted(rowNumber);
     }
 }

@@ -11,7 +11,6 @@ import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.util.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -197,8 +196,8 @@ class BaseTableTest {
     void isDeletedRow() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
-            assertFalse(t.isDeletedRow(0));
-            assertFalse(t.isDeletedRow(1));
+            assertFalse(t.isRowDeleted(0));
+            assertFalse(t.isRowDeleted(1));
         }
     }
 }

@@ -292,7 +292,7 @@ public abstract class BaseTable implements AutoCloseable {
      * @param rowNumber The 0-based index of the possibly deleted row
      * @return  true if the row at the index was deleted; false otherwise
      */
-    public boolean isDeletedRow(int rowNumber) {
+    public boolean isRowDeleted(int rowNumber) {
         return false;
     }
 }

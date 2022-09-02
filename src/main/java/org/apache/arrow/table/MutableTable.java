@@ -134,7 +134,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      *
      * @param vsr  The VectorSchemaRoot providing data for this Table
      */
-    public static MutableTable of(VectorSchemaRoot vsr) {
+    public static MutableTable from(VectorSchemaRoot vsr) {
         MutableTable table = new MutableTable(vsr.getSchema(),
                 vsr.getFieldVectors().stream().map(v -> {
                     TransferPair transferPair = v.getTransferPair(v.getAllocator());
@@ -415,7 +415,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      * @return  true if the row at the index was deleted; false otherwise
      */
     @Override
-    public boolean isDeletedRow(int rowNumber) {
+    public boolean isRowDeleted(int rowNumber) {
         if (rowNumber >= rowCount) {
             return true;
         }

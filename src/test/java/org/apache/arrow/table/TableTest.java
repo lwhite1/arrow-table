@@ -175,7 +175,7 @@ class TableTest {
     void constructFromVsr() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (VectorSchemaRoot vsr = new VectorSchemaRoot(vectorList)) {
-            Table t = Table.of(vsr);
+            Table t = Table.from(vsr);
             assertEquals(2, t.rowCount);
             assertEquals(0, vsr.getRowCount()); // memory is copied for slice, not transferred
             t.close();

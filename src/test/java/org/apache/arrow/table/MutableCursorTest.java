@@ -127,7 +127,7 @@ class MutableCursorTest {
             assertEquals("two", c.getVarChar(1));
             c.setVarChar(1, "2");
             c.at(1);
-            assertTrue(c.isDeletedRow());
+            assertTrue(c.isRowDeleted());
             c.at(2);
             assertEquals("2", c.getVarChar(1));
         }
@@ -144,7 +144,7 @@ class MutableCursorTest {
             assertEquals("two", c.getVarChar(VARCHAR_VECTOR_NAME_1));
             c.setVarChar(VARCHAR_VECTOR_NAME_1, "2");
             c.at(1);
-            assertTrue(c.isDeletedRow());
+            assertTrue(c.isRowDeleted());
             c.at(2);
             assertEquals("2", c.getVarChar(VARCHAR_VECTOR_NAME_1));
 
@@ -167,10 +167,10 @@ class MutableCursorTest {
         try (MutableTable t = new MutableTable(vectorList)) {
             MutableCursor c = t.mutableCursor();
             c.at(0);
-            assertFalse(c.isDeletedRow());
+            assertFalse(c.isRowDeleted());
             c.deleteCurrentRow();
-            assertTrue(c.isDeletedRow());
-            assertTrue(t.isDeletedRow(0));
+            assertTrue(c.isRowDeleted());
+            assertTrue(t.isRowDeleted(0));
         }
     }
 
