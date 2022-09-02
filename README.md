@@ -217,7 +217,7 @@ Currently, Table usage of the C-Data interface is mediated by VectorSchemaRoot. 
 
 ***TODO: Consider (future?) direct C-Data support***
 
-One concern with this approach is that using VectorSchemaRoot as an itermediary means that the static method `Table.from(VectorSchemaRoot)` cannot be used to transfer the memory from the VSR, so that it would be possible to directly access the vectors inside the 'immutable' table. (This is in-part because the implementation of CdataReferenceManager does not support the transfer operation.) Furthermore, the Table constructor new Table(VectorSchemaRoot), which creates a table that shares memory with the given VSR cannot be removed, meaning that it may be used for other use-cases where a truly immutable table is desirable. Finally, the need to go through a VSR makes it less obvious how the import export process should be performed and makes the API a bit more complex.
+One concern with this approach is that using VectorSchemaRoot as an itermediary means that the static method `Table.from(VectorSchemaRoot)` cannot be used to transfer the memory from the VSR, so that it would be possible to directly access the vectors inside the 'immutable' table. (This is in-part because the implementation of CdataReferenceManager does not support the transfer operation.) Furthermore, the Table constructor new Table(VectorSchemaRoot), which creates a table that shares memory with the given VSR cannot be removed, meaning that it may be used for other use-cases where a truly immutable table is desirable. Finally, the need to go through a VSR makes it less obvious how the import/export process should be performed and makes the API a bit more complex.
 
 ```java
 VectorSchemaRoot importedRoot;
