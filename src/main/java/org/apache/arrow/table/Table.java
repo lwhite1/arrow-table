@@ -42,7 +42,7 @@ public class Table extends BaseTable implements Iterable<Cursor> {
      * between the Table and VectorSchemaRoot. Direct modification of those vectors
      * is unsafe and should be avoided.
      *
-     * @see Table#of(VectorSchemaRoot) for an alternative without data sharing
+     * @see Table#of(VectorSchemaRoot) for an alternative without data sharing (preferred)
      *
      * @param vsr  The VectorSchemaRoot providing data for this Table
      */
