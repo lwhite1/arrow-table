@@ -1,20 +1,30 @@
 
 
-# Table
+# Working with Tables
 
 **NOTE**: The API described in this document is experimental and subject to change.
 
 Table and MutableTable are tabular data structures backed by Arrow arrays. They are similar to VectorSchemaRoot, 
-but lack its support for batch operations. They also differ considerably in terms of their mutation semantics.
+but lack its support for batch operations. Anyone managing batches of tabular data (in a pipeline, for example) would likely be better off continuing to use a VectorSchemaRoot. Table and MutableTable also differ from VectorSchemaRoot in their mutation semantics.
 
 ## Mutation semantics
 
-_Table_ is (almost) entirely immutable. The underlying vectors are not exposed. They can only be modified by keeping a reference to the arrays that are passed to the Table constructor, and updating those outside of the Table class, which is unsafe and should be avoided. 
+VectorSchemaRoot provides a thin wrapper on the FieldVectors has hold its data. While these FieldVectors have setters, they must be used in a particular way, as described in ValueVector JavaDoc: 
+
+- values need to be written in order (e.g. index 0, 1, 2, 5)
+- null vectors start with all values as null before writing anything
+- for variable width types, the offset vector should be all zeros before writing
+- you must call setValueCount before a vector can be read
+- you should never write to a vector once it has been read.
+
+As these rules are not enforced by the API, it's up to the programmer to ensure they are not violated. Failure to do so could lead to runtime exceptions. *Table* and *MutableTable* take a different approach:
+
+_Table_ is (almost) entirely immutable. The underlying vectors are not exposed. They can only be modified by keeping a reference to the arrays that are passed to the Table constructor, and updating those outside of the Table class, which should be avoided. Whenever possible, Tables should be created using a constructor that transfers the memory to the table.
 
 _MutableTable_, on the other hand, has more general mutation support than VectorSchemaRoot. Values of any ArrowType can be modified at any time and in any order. However, because it is ultimately backed by Arrow arrays, the mutation process may be complex and less efficient than might be desired. Mutation is described in more detail below in the _Write Operations_ section.
 
 ## What's in a Table?
-Both Table and MutableTable consist largely of a Schema and a collection of FieldVector objects. 
+Both Table and MutableTable consist largely of a Schema and a collection of FieldVector objects. Both Table and MutableTable are designed to be accessed via positionable Cursor objects that provide a row-oriented interface.
 
 ## Creating a Table
 
@@ -32,7 +42,45 @@ VectorSchemaRoot vsr = myMethodForGettingVsrs();
 MutableTable t = MutableTable.from(vsr);
 ```
 
-MutableTables don't provide the benefits of immutability of course, but they do provide a more general and safer approach to mutability as described below. 
+MutableTables don't provide the benefits of immutability of course, but they have a more general and safer approach to mutability than VectorSchemaRoot, so they may be preferable for some applications. 
+
+## Managing Table memory
+
+Remember that Tables use off-heap memory that must be explicitly freed when it is no longer needed. Table implements AutoCloseable so the best way to create one is in a try-with-resources block: 
+
+```java
+try (VectorSchemaRoot vsr = myMethodForGettingVsrs(); 
+		 MutableTable t = MutableTable.from(vsr)) {
+		 // do useful things.
+}
+```
+
+If you don't use a try-with-resources block, you must close the Table manually
+
+````java
+try {
+  VectorSchemaRoot vsr = myMethodForGettingVsrs(); 
+  MutableTable t = MutableTable.from(vsr);
+  // do useful things.
+} finally {
+  vsr.close();
+  t.close();
+}
+````
+
+Manually closing should be performed in a finally block.
+
+## Adding and removing Vectors
+
+Both Table and MutableTable provide facilities for adding and removing FieldVectors that are modeled on the same functionality in VectorSchemaRoot. As with VectorSchemaRoot. These operations return new instances of the structure rather than modifiying them in-place.
+
+```java
+try (Table t = new Table(vectorList)) {
+  IntVector v3 = new IntVector("3", intFieldType, allocator);
+  Table t2 = t.addVector(2, v3);
+  Table t3 = t2.removeVector(1);
+}
+```
 
 ## Row operations
 
@@ -46,7 +94,7 @@ Call `Table#immutableCursor` to get a cursor supporting only read operations.
 Cursor c = table.immutableCursor(); 
 ```
 
-This works for either mutable or immutable tables. If your table is a MutableTable, you can get a cursor that can be used to write to the table using the `Table#mutableCursor()` method:
+This works for either mutable or immutable tables. If your table is a MutableTable, you can get a cursor that can be used to write to the table using the `mutableCursor()` method:
 
 ```java
 MutableCursor mc = mutableTable.mutableCursor(); 
@@ -75,11 +123,23 @@ Table implements `Iterable<Cursor>` so you can access rows in an enhanced *for* 
 
 ```java
 for (Cursor row: table) {
-  int age = row.get("age");
+  int age = row.getInt("age");
   boolean nameIsNull = row.isNull("name");
   ... 
 }
 ```
+
+MutableTable implements `Iterable<MutableCursor>` rather than `Iterable<Cursor>`,  which provides write access:
+
+```java
+for (MutableCursor row: mutableable) {
+  int age = row.getInt("age");
+  row.setNull("name");
+  ... 
+}
+```
+
+If you need an ImmutableCursor for your MutableTable, you can get one as described above.
 
 ### Read operations
 
@@ -128,9 +188,11 @@ All accessor methods return the cursor itself so they can be chained together.
 
 #### How mutation works
 
+This section describes the mutation API and implementation. It's important to have some understanding of the mutation mechanism so that you understand the performance, safety, and reliability implications of changing Arrow data values. 
+
 ##### Deletions
 
-To delete a row, set the cursor to the row that you want deleted and call 'MutableCursor#deleteCurrentRow()'. To delete all the even-numbered rows in a MutableTable, for example, you could do this: 
+To delete a row, set the cursor to the row that you want deleted and call `deleteCurrentRow()`. To delete all the even-numbered rows in a MutableTable, for example, you could do this: 
 
 ```java
 for (MutableCursor row: mutableTable) {
@@ -140,7 +202,7 @@ for (MutableCursor row: mutableTable) {
 }
 ```
 
-Deletions are performed virtually. The row to be deleted is marked as such, but remains in the table until compaction occurs. The number of deleted records is available using `Table#deletedRowCount()`. This may be useful in deciding when to compact. Once a row is marked as deleted, it is skipped on subsequent iterations, but it can be accessed using `MutableTable#at(rowIndex)`. The following code checks whether a row is deleted: 
+Deletions are performed virtually. The row to be deleted is marked as such, but remains in the table until compaction occurs. The number of deleted records is available using `Table#deletedRowCount()`. This may be useful in deciding when to compact. Once a row is marked as deleted, it is skipped on subsequent iterations, but it can be accessed using `MutableTable#at(rowIndex)`. The following code checks whether a row is deleted, and deletes it if it isn't: 
 
 ```java
 MutableCursor mc = mutableTable.mutableCursor();
@@ -150,7 +212,7 @@ if (!mc.isDeletedRow()) {
 }
 ```
 
-Note that extreme care must be taken when undo-ing deletes in the case where updates are involved. See the section on updates for more information. 
+Note that extreme care must be taken when undo-ing deletes when updates are involved. See the section on updates for more information. 
 
 ###### Compaction
 
@@ -170,13 +232,6 @@ Updates are performed using *set()* methods.
 
 There are two ways that updates are handled. They are done in place whenever possible. For example, updates to any fixed-width vector are always performed in-place. Otherwise, they are performed by deleting the original row, and appending a new copy of that row with the value changed.
 
-Please note that setting two variable-width vectors in a single row (see below) may result in multiple deletions and insertions.
-
-```java
-mutableCursor.setVarChar("first_name", "John")
-    .setVarChar("last_name", "Doe");
-```
-
 ###### Updating dictionary-encoded fields
 
 Updates to dictionary-encoded fields may be more efficient....
@@ -185,19 +240,43 @@ Updates to dictionary-encoded fields may be more efficient....
 
 ###### Performing multiple updates in one pass
 
-Using Holders it may be possible....
+Please note that setting two variable-width vectors in a single row (see below) may result in multiple deletions and insertions.
 
-***TODO: write this section when code is available***
+```java
+mutableCursor.setVarChar("first_name", "John").setVarChar("last_name", "Doe");
+```
+
+If neither of the vectors use dictionary encoding, updating both in the same row would involve two operations. 
+
+To avoid this problem, the method *setAll()* is provided. *setAll()* takes a map of vector names to ValueHolders to perform multiple updates in the same row with a single delete/append row occuring behind the scenes. For example: 
+
+```java
+Map<String, ValueHolder> valueMap = new HashMap();
+map.put("first_name", fNameHolder);
+map.put("last_name", lNameHolder)l
+mutableCurser.setAll(valueMap);
+```
+
+Note that the createion of ValueHolders for complex types is not entirely trivial, but only updates that lead to a delete-and-append operation benefit from this approach. Updates performed in-place can be handled using the individual  setters (e.g. *setInt(102);*), and the two approaches may be combined to modify any row. 
 
 ##### Appending new rows
 
-***TODO: write this section when code is available***
+***TODO: this section is highly speculative. Add example code when available***
+
+The *appendRow()* operation does two things:
+
+1. Ensures that there is space in each vector to write a new row.
+2. Positions the row index at the new row 
+
+After calling appendRow(), updates can be perfomed as usual.  See the section on pefroming multiple operations on a single row for performance considerations.
 
 ##### Limitations and unsupported operations
 
 Table does not currently support insertAt(index, value) operations, nor does it guarantee that row order remains consistent after update operations.  Both of these operations would be useful for anyone building an Arrow-native dataframe. 
 
 ## Converting to a VectorSchemaRoot
+
+Tables can be converted to VectorSchemaRoot objects using the *toVectorSchemaRoot()* method. 
 
 ```java
 VectorSchemaRoot root = myTable.toVectorSchemaRoot();
@@ -209,7 +288,7 @@ The ability to work with native code is required for many Arrow features. This s
 
 ### Using the Streaming API with Tables
 
-
+***TODO: write this section when code is available***
 
 ### Using the C-Data interface with Tables
 

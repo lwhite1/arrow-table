@@ -6,21 +6,27 @@ import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.dictionary.Dictionary;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
+import org.apache.arrow.vector.holders.IntHolder;
+import org.apache.arrow.vector.holders.ValueHolder;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
 import org.apache.arrow.vector.types.pojo.Field;
 
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * MutableCursor is a positionable, mutable cursor backed by a {@link MutableTable}.
  *
  * If a row in a table is marked as deleted, it is skipped when iterating.
  *
- * TODO: map a ValueHolder for each vector
  */
 public class MutableCursor extends Cursor {
+
+    /** Lazy map of Fields to ValueHolders **/
+    private final Map<Field, ValueHolder> holderMap = new HashMap<>();
 
     /**
      * DictionaryProvider for any Dictionary-encoded vectors in the Table. This may be null if no vectors are encoded
@@ -118,7 +124,7 @@ public class MutableCursor extends Cursor {
 
     /**
      * Sets the value of the column at the given index and this MutableCursor to the given value. An
-     * IllegalStateException is * thrown if the column is not present in the MutableCursor and an
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
      * IllegalArgumentException is thrown if it has a different type to that named in the method
      * signature
      *
@@ -132,7 +138,7 @@ public class MutableCursor extends Cursor {
 
     /**
      * Sets the value of the column with the given name at this MutableCursor to the given value. An
-     * IllegalStateException is * thrown if the column is not present in the MutableCursor and an
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
      * IllegalArgumentException is thrown if it has a different type to that named in the method
      * signature
      *
@@ -146,7 +152,7 @@ public class MutableCursor extends Cursor {
 
     /**
      * Sets the value of the column with the given name at this MutableCursor to the given value. An
-     * IllegalStateException is * thrown if the column is not present in the MutableCursor and an
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
      * IllegalArgumentException is thrown if it has a different type to that named in the method
      * signature
      *
@@ -160,7 +166,7 @@ public class MutableCursor extends Cursor {
 
     /**
      * Sets the value of the column at the given index and this MutableCursor to the given value. An
-     * IllegalStateException is * thrown if the column is not present in the MutableCursor and an
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
      * IllegalArgumentException is thrown if it has a different type to that named in the method
      * signature
      *
@@ -182,7 +188,7 @@ public class MutableCursor extends Cursor {
 
     /**
      * Sets the value of the column with the given name at this MutableCursor to the given value. An
-     * IllegalStateException is * thrown if the column is not present in the MutableCursor and an
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
      * IllegalArgumentException is thrown if it has a different type to that named in the method
      * signature
      *
@@ -217,7 +223,6 @@ public class MutableCursor extends Cursor {
         copyRow(rowIdx, nextRow);
         return nextRow;
     }
-
 
     /**
      * Copies the data at {@code rowIdx} to the end of the table
@@ -347,5 +352,95 @@ public class MutableCursor extends Cursor {
         }
         ((MutableTable) table).clearDeletedRows();
         ((MutableTable) table).setRowCount(writePosition);
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public IntHolder getIntHolder(String columnName) {
+        IntHolder holder = (IntHolder) getHolder(columnName);
+        return holder;
+    }
+
+    /**
+     * Returns the ValueHolder with the given name, or {@code null} if the name is not found. Names are case-sensitive.
+     *
+     * @param columnName   The name of the vector
+     * @return the Vector with the given name, or null
+     */
+    ValueHolder getHolder(String columnName) {
+        for (Map.Entry<Field, ValueHolder> entry: holderMap.entrySet()) {
+            if (entry.getKey().getName().equals(columnName)) {
+                return entry.getValue();
+            }
+        }
+        IntVector v = (IntVector) table.getVector(columnName);
+        IntHolder holder = new IntHolder();
+        holderMap.put(v.getField(), holder);
+        return holder;
+    }
+
+    /**
+     * Sets the values in the map of ValueHolders to the columns with the associated name, in the current row
+     *
+     * An IllegalStateException is thrown if the column is not present in the MutableCursor
+     * and an IllegalArgumentException is thrown if it is present, but has a type that is different from the ValueHolder.
+     *
+     * This method can be used to set multiple values in a single method invocation. The advantage of this over using
+     * individual calls, is that some updates to variable width columns may cause the row to be deleted and
+     * a new row added with the updated value. To do this repeatedly in a single row would cause unnecessary data
+     * movement. For example:
+     *<blockquote><pre>
+     *     mutableTable.setVarChar("firstName", "John").setVarChar("lastName", "Smith");
+     *</pre></blockquote>
+     * <p>
+     *     Might cause the updated row to be copied and marked for deletion twice.
+     * <p>
+     *     On the other hand, the following code would cause the row to be copied only once.
+     * <p>
+     * <blockquote><pre>
+     *
+     *     mutableTable.setAll("firstName", "John").setVarChar("lastName", "Smith");
+     *  </pre></blockquote>
+     * Note that there is no need to set all values this way unless desired
+     *
+     * @param valueMap  A map of vector names to value holders
+     * @return          This cursor for chaining
+     */
+    public MutableCursor setAll(Map<String, ValueHolder> valueMap) {
+        for (Map.Entry<String, ValueHolder> entry: valueMap.entrySet()) {
+            FieldVector fv = table.getVector(entry.getKey());
+            ValueHolder holder = entry.getValue();
+
+            if (fv == null) {
+               throw new IllegalStateException(String.format("Column %s is not present in the table.", entry.getKey()));
+            }
+            Types.MinorType type = fv.getMinorType();
+
+            try {
+                switch (type) {
+                    // TODO: Handle the update for each remaining type
+                    case INT:
+                        IntVector intVector = (IntVector) fv;
+                        IntHolder intHolder = (IntHolder) holder;
+                        // TODO: Handle the actual update for IntVectors
+                        // intVector.setSafe(getRowNumber(), intHolder);
+                        // return this;
+                        throw new UnsupportedOperationException("Not yet implemented");
+                    default:
+                        throw new UnsupportedOperationException(buildErrorMessage("setAll", type));
+                }
+            } catch (ClassCastException cce) {
+                throw new IllegalArgumentException(
+                        String.format("Column %s has type %s, which does not match the provided ValueHolder",
+                                entry.getKey(), type));
+            }
+        }
+        return this;
     }
 }

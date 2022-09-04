@@ -6,6 +6,7 @@ import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
+import org.apache.arrow.vector.holders.ValueHolder;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.TransferPair;
@@ -306,6 +307,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
         super.rowCount = rowCount;
 /*
         TODO: Double check that this isn't wanted
+        TODO: Should this be public?
         for (FieldVector v : fieldVectors) {
             v.setValueCount(rowCount);
         }
