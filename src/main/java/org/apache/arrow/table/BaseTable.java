@@ -5,6 +5,7 @@ import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.complex.reader.FieldReader;
+import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.TransferPair;
@@ -21,10 +22,16 @@ import java.util.stream.Collectors;
  */
 public abstract class BaseTable implements AutoCloseable {
 
+    /** The field vectors holding the data in this table */
     protected final List<FieldVector> fieldVectors;
 
+    /** An optional DictionaryProvider. One must be present if any vector in the table is dictionary encoded */
+    protected DictionaryProvider dictionaryProvider = new DictionaryProvider.MapDictionaryProvider();
+
+    /** A map of Fields to FieldVectors used to select Fields */
     protected final Map<Field, FieldVector> fieldVectorsMap = new LinkedHashMap<>();
 
+    /** The schema for the table */
     protected Schema schema;
 
     /**
@@ -155,11 +162,17 @@ public abstract class BaseTable implements AutoCloseable {
         return fieldVectors.size();
     }
 
+    /**
+     * Closes all the vectors holding data for this table and sets the rowcount to 0, preventing enumeration
+     */
     void clear() {
         close();
         rowCount = 0;
     }
 
+    /**
+     * Closes all the vectors holding data for this table
+     */
     @Override
     public void close() {
         try {
@@ -172,6 +185,9 @@ public abstract class BaseTable implements AutoCloseable {
         }
     }
 
+    /**
+     * Returns the number of rows in this table
+     */
     public long getRowCount() {
         return rowCount;
     }
@@ -294,5 +310,12 @@ public abstract class BaseTable implements AutoCloseable {
      */
     public boolean isRowDeleted(int rowNumber) {
         return false;
+    }
+
+    /**
+     * Returns the DictionaryProvider for this table. It can be used to decode an encoded values
+     */
+    public DictionaryProvider getDictionaryProvider() {
+        return dictionaryProvider;
     }
 }

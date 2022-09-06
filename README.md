@@ -44,6 +44,16 @@ MutableTable t = MutableTable.from(vsr);
 
 MutableTables don't provide the benefits of immutability of course, but they have a more general and safer approach to mutability than VectorSchemaRoot, so they may be preferable for some applications. 
 
+### Creating a Table with dictionary encoded vectors
+
+Another point of difference from VectorSchemaRoot is that Tables hold an optional DictionaryProvider instance. If any vectors in the source data are dictionary encoded, a DictionaryProvider that can be used to un-encode the values must be provided. 
+
+```java
+VectorSchemaRoot vsr = myVsr(); 
+DictionaryProvider provider = myProvider();
+Table t = Table.from(vsr, provider);
+```
+
 ## Managing Table memory
 
 Remember that Tables use off-heap memory that must be explicitly freed when it is no longer needed. Table implements AutoCloseable so the best way to create one is in a try-with-resources block: 
