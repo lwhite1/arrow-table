@@ -4,7 +4,7 @@
 
 **NOTE**: This API is experimental and subject to change.
 
-Like VectorSchemaRoot, Table and MutableTable are tabular data structures backed by Arrow arrays. They differ from VectorSchemaRoot mainly in that they lack its support for batch operations. Anyone processing batches of tabular data in a pipeline should continue to use VectorSchemaRoot. Table and MutableTable also differ from VectorSchemaRoot in their mutation semantics.
+Like VectorSchemaRoot, *Table* and *MutableTable* are tabular data structures backed by Arrow arrays. They differ from VectorSchemaRoot mainly in that they lack its support for batch operations. Anyone processing batches of tabular data in a pipeline should continue to use VectorSchemaRoot. Table and MutableTable also differ from VectorSchemaRoot in their mutation semantics.
 
 ## Mutation semantics
 
@@ -16,27 +16,27 @@ VectorSchemaRoot provides a thin wrapper on the FieldVectors has hold its data. 
 - you must call setValueCount before a vector can be read
 - you should never write to a vector once it has been read.
 
-The rules are not enforced by the API so it's up to the programmer to ensure they are followed. Failure to do so could lead to runtime exceptions. 
+The rules aren't enforced by the API so it's up to the programmer to ensure they're followed. Failure to do so could lead to runtime exceptions. 
 
 _Table_ is immutable. The underlying vectors are not exposed. When a Table is created from existing vectors, memory is transferred so subsequent changes to the vectors don't impact the table's values.
 
-_MutableTable_ has more general mutation support than VectorSchemaRoot. Values of any ArrowType can be modified at any time in any order. However, the mutation process may be to slow for some applications. Mutation is described in more detail below in the _Write Operations_ section.
+_MutableTable_ has more general mutation support than VectorSchemaRoot. Values of any ArrowType can be modified at any time in any order. The process, however, may be too slow for some applications. Mutation is described in more detail below in the _Write Operations_ section.
 
 ## What's in a Table?
-Both Table and MutableTable consist of a Schema and a collection of FieldVector objects, and both are designed to be accessed via a row-oriented interface.
+Like VectorSchemaRoot, both Table and MutableTable consist of a Schema and a collection of FieldVector objects, and both are designed to be accessed via a row-oriented interface.
 
-## Creating a Table
+## Creating Tables
 
 ### Creating a Table from a VectorSchemaRoot
 
-Tables may be created from a VectorSchemaRoot. The data is transferred from the VectorSchemaRoot to the new Table, clearing the VectorSchemaRoot in the process, and ensuring that the data in your new Table is never changed. An example is provided below:
+Tables are created from a VectorSchemaRoot as shown below. The data is transferred from the VectorSchemaRoot to the new Table, clearing the VectorSchemaRoot in the process. This ensures that the data in your new Table is never changed.
 
 ```java
 VectorSchemaRoot vsr = getMyVsr(); 
 Table t = new Table(vsr);
 ```
 
-If you now update the FieldVectors used to create the VectorSchemaRoot (using some variation of  `vector.setSafe()`), the VectorSchemaRoot *vsr* would reflect those changes, but the values in Table *t* are unchanged. 
+If you now update the FieldVectors used to create the VectorSchemaRoot (using some variation of  `ValueVector#setSafe()`), the VectorSchemaRoot would reflect those changes, but the values in Table *t* are unchanged. 
 
 To create a MutableTable, a similar method is provided:
 
@@ -45,13 +45,13 @@ VectorSchemaRoot vsr = getMyVsr();
 MutableTable t = new MutableTable(vsr);
 ```
 
-Again the memory is transferred to the table. MutableTables don't provide the benefits of immutability of course, but they are protected from *external* changes.
+Again the memory is transferred to the table. MutableTables don't provide the benefits of immutability of course, but they *are* protected from external changes.
 
-#### Creating a Table with dictionary encoded vectors
+#### Creating Tables with dictionary-encoded vectors
 
+***TODO: this section is highly speculative. Add example code when available***
 
-
-Another point of difference from VectorSchemaRoot is that Tables hold an optional DictionaryProvider instance. If any vectors in the source data are dictionary encoded, a DictionaryProvider that can be used to un-encode the values must be provided. 
+Another point of difference is that dictionary-encoding is managed separately from VectorSchemaRoot, while Tables hold an optional DictionaryProvider instance. If any vectors in the source data are encoded, a DictionaryProvider must be set to un-encode the values.  
 
 ```java
 VectorSchemaRoot vsr = myVsr(); 
@@ -59,13 +59,39 @@ DictionaryProvider provider = myProvider();
 Table t = new Table(vsr, provider);
 ```
 
+How dictionaries are used is described below.
+
 ### Creating a Table from ValueVectors
 
-It is rarely a good idea to share vectors between multiple VectorSchemaRoots, or between VectorSchemaRoots and tables. Creating a VectorSchemaRoot from a list of vectors does not cause the reference counts for the vectors to be incremented. Unless you manage it manually, you will have more references than reference counts, which can lead to trouble. There is an implicit assumption that the vectors were created for use by *one* VectorSchemaRoot. 
+It is rarely a good idea to share vectors between multiple VectorSchemaRoots, and it would not be a good idea to share them between VectorSchemaRoots and tables. Creating a VectorSchemaRoot from a list of vectors does not cause the reference counts for the vectors to be incremented. Unless you manage it manually, the code shown below would lead to more references than reference counts, which could lead to trouble. There is an implicit assumption that the vectors were created for use by *one* VectorSchemaRoot. 
 
-When you create Tables from vectors, it is assumed that there are no external references to those vectors. But, just to be on the safe side, the buffers underlying these vectors are transferred to the new Table and the original vectors are cleared.  
+*Don't do this:*
 
-## Managing Table memory
+```Java
+IntVector myVector = createMyIntVector();  // Reference count for myVector = 1
+VectorSchemaRoot vsr1 = new VectorSchemaRoot(myVector); // Still one reference
+VectorSchemaRoot vsr2 = new VectorSchemaRoot(myVector); 
+// Ref count is still one, but there are two VSRs with a reference to myVector
+vsr2.clear(); // Reference count for myVector is 0.
+```
+
+What is happening is that the reference counter works at a lower level than the VectorSchemaRoot interface. A reference counter counts references to ArrowBuf instances that control memory buffers. It doesn't count references to the ValueVectors that hold *them*. In the examaple above, each ArrowBuf is held by one ValueVector, so there is only one reference. This gets a little blurry, though, when you call the VectorSchemaRoot's clear() method, which frees the memory held by each of the vectors it references, even though another instance might refer to the same vectors. 
+
+When you create Tables from vectors, it's assumed that there are no external references to those vectors. But, just to be on the safe side, the buffers underlying these vectors are transferred to new ValueVectors in the new Table, and the original vectors are cleared.  
+
+*Don't do this either, but understand the difference from above:*
+
+```Java
+IntVector myVector = createMyIntVector();  // Reference count for myVector = 1
+Table vsr1 = new Table(myVector);          // Still one reference
+Table vsr2 = new Table(myVector); 
+// Still 1. The vector held by vsr1 was cleared and its buffers transferred to a new vector.
+vsr2.clear(); // Reference count for myVector is 0.
+```
+
+With Tables, memory is explicitly transferred on instantiatlon so the buffers are held by that table are held by *only* that table. 
+
+## Freeing memory explicitly
 
 Tables use off-heap memory that must be explicitly freed when it is no longer needed. Table implements AutoCloseable so the best way to create one is in a try-with-resources block: 
 
@@ -76,7 +102,7 @@ try (VectorSchemaRoot vsr = myMethodForGettingVsrs();
 }
 ```
 
-If you don't use a try-with-resources block, you must close the Table manually
+If you don't use a try-with-resources block, you must close the Table manually:
 
 ````java
 try {
@@ -91,9 +117,9 @@ try {
 
 Manually closing should be performed in a finally block.
 
-## Adding and removing Vectors
+## Adding and removing vectors from a table
 
-Both Table and MutableTable provide facilities for adding and removing FieldVectors modeled on the same functionality in VectorSchemaRoot. As with VectorSchemaRoot. These operations return new instances rather than modifiying them in-place.
+Both Table and MutableTable provide facilities for adding and removing FieldVectors modeled on the same functionality in VectorSchemaRoot. As with VectorSchemaRoot. These operations return new instances rather than modifiying the original instance in-place.
 
 ```java
 try (Table t = new Table(vectorList)) {
@@ -104,9 +130,35 @@ try (Table t = new Table(vectorList)) {
 }
 ```
 
+## Slicing tables
+
+Both Table and MutableTable support *slice()* operations. A slice of a Table is another Table, and a slice of a MutableTable is a MutableTable. 
+
+```Java
+try (Table t = new Table(vectorList)) {
+  Table t2 = t.slice(100, 200); // creates a slice referencing the values in range (100, 200]
+  // do something useful with t2, and don't forget to close it explicitly
+}
+```
+
+What if you created a slice of *all* the values in the original table?
+
+```Java
+try (Table t = new Table(vectorList)) {
+  Table t2 = t.slice(0, t.getRowCount()); // creates a slice referencing all the values in t
+  // ...
+}
+```
+
+The difference between creating a slice with all the data in the source Table, and constructing a new Table with the same vectors as the source Table, is that when you *construct* a new table, the buffers are transferred from the source to the destination. With a slice, both tables share the same underlying vectors. That's OK, though, since both Tables are immutable.  
+
+### Slicing a MutableTable
+
+***TODO: this section is highly speculative. Add example code when available***
+
 ## Row operations
 
-Row-based access is supported using a Cursor object. Cursor provides *get()* operations by both vector name and vector position, but no *set()* operations. A MutableCursor provides both *set()* and *get()* operations. If you are working with a MutableTable, you can use either a MutableCursor or an immutable Cursor to access the data.
+Row-based access is supported using a Cursor object. Cursor provides *get()* methods by both vector name and vector position, but no *set()* operations. A MutableCursor provides both *set()* and *get()* operations. MutableCursors are only available for MutableTables. If you are working with a MutableTable, however, you can use either a MutableCursor or an immutable Cursor to access the data.
 
 ### Getting a cursor
 
@@ -116,20 +168,13 @@ Call `Table#immutableCursor` to get a cursor supporting only read operations.
 Cursor c = table.immutableCursor(); 
 ```
 
-This works for either mutable or immutable tables. If your table is a MutableTable, you can get a cursor that can be used to write to the table using the `mutableCursor()` method:
+As mentioned, this works for either mutable or immutable tables. If you have a MutableTable, you can get a cursor to write to the table using the `mutableCursor()` method:
 
 ```java
 MutableCursor mc = mutableTable.mutableCursor(); 
 ```
 
 ### Getting around
-
-Cursors are usually iterated in the order of the underlying data vectors, but they are also positionable, so you can skip to a specific row. Row numbers are 0-based. 
-
-```java
-Cursor c = table.immutableCursor(); 
-int age101 = c.at(101) // change position directly to 101
-```
 
 Since cursors are itearble, you can traverse a table using a standard while loop:
 
@@ -163,7 +208,16 @@ for (MutableCursor row: mutableable) {
 
 If you need an ImmutableCursor for your MutableTable, you can get one as described above.
 
-### Read operations
+Finally, while cursors are usually iterated in the order of the underlying data vectors, but they are also positionable using the `Cursor#at()` method, so you can skip to a specific row. Row numbers are 0-based. 
+
+```java
+Cursor c = table.immutableCursor(); 
+int age101 = c.at(101) // change position directly to 101
+```
+
+### Read operations using cursors
+
+In addition to getting values, you can check if a value is null using `isNull()`. 
 
 ```java
 Cursor c = table.immutableCursor(); 
@@ -172,7 +226,7 @@ boolean name101isNull = c.isNull("name");
 int row = c.getRowNumber(); // 101
 ```
 
-### Write operations
+### Write operations using cursors
 
 A MutableTables can be modified through its MutableCursor. You can:
 
@@ -296,10 +350,6 @@ After calling appendRow(), updates can be perfomed as usual.  See the section on
 
 Table does not currently support insertAt(index, value) operations, nor does it guarantee that row order remains consistent after update operations.  Both of these operations would be useful for anyone building an Arrow-native dataframe. 
 
-## Slicing tables
-
-Both Table and MutableTable support *slice()* operations. A slice of a Table is another Table, and a slice of a MutableTable is a MutableTable. 
-
 ## Converting a Table to a VectorSchemaRoot
 
 Tables can be converted to VectorSchemaRoot objects using the *toVectorSchemaRoot()* method. 
@@ -308,7 +358,7 @@ Tables can be converted to VectorSchemaRoot objects using the *toVectorSchemaRoo
 VectorSchemaRoot root = myTable.toVectorSchemaRoot();
 ```
 
-Buffers are transferred to the VectorSchemaRoot.
+Buffers are transferred to the VectorSchemaRoot and the Table is cleared.
 
 ## Working with the Streaming API and the C-Data interface
 
@@ -324,7 +374,7 @@ Currently, Table usage of the C-Data interface is mediated by VectorSchemaRoot. 
 
 ***TODO: Consider (future?) direct C-Data support***
 
-One concern with this approach is that using VectorSchemaRoot as an itermediary means that the static method `Table.from(VectorSchemaRoot)` cannot be used to transfer the memory from the VSR, so that it would be possible to directly access the vectors inside the 'immutable' table. (This is in-part because the implementation of CdataReferenceManager does not support the transfer operation.) Furthermore, the Table constructor new Table(VectorSchemaRoot), which creates a table that shares memory with the given VSR cannot be removed, meaning that it may be used for other use-cases where a truly immutable table is desirable. Finally, the need to go through a VSR makes it less obvious how the import/export process should be performed and makes the API a bit more complex.
+One concern with this approach is that using VectorSchemaRoot as an itermediary means that the constructor: `new Table(VectorSchemaRoot)` cannot be used to transfer the memory from the VSR, so that it would be possible to directly access the vectors inside the 'immutable' table. (This is because the current implementation of CdataReferenceManager does not support the transfer operation.) Furthermore, the Table constructor new Table(VectorSchemaRoot), which creates a table that shares memory with the given VSR cannot be removed, meaning that it may be used for other use-cases where a truly immutable table is desirable. Finally, the need to go through a VSR makes it less obvious how the import/export process should be performed and makes the API a bit more complex.
 
 ```java
 VectorSchemaRoot importedRoot;

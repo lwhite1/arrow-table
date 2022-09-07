@@ -215,7 +215,7 @@ class MutableTableTest {
             MutableTable slice = t.slice(1, 1);
             assertEquals(1, slice.rowCount);
             assertEquals(2, t.rowCount); // memory is copied for slice, not transferred
-            
+
             // TODO: Demonstrate the interactions between the slices or lack thereof
 
             slice.close();
