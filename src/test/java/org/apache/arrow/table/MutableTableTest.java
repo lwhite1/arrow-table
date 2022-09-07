@@ -16,7 +16,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.arrow.table.TestUtils.twoIntColumns;
+import static org.apache.arrow.table.TestUtils.*;
+import static org.apache.arrow.table.TestUtils.INT_VECTOR_NAME_1;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MutableTableTest {
@@ -188,6 +189,24 @@ class MutableTableTest {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (MutableTable t = new MutableTable(vectorList)) {
             assertEquals(t, t.toMutableTable());
+        }
+    }
+
+    @Test
+    void toImmutableTable() {
+        Table table = null;
+        List<FieldVector> vectorList = twoIntColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            assertNotNull(t.getVector(INT_VECTOR_NAME_1));
+            assertNotNull(t.getVector(INT_VECTOR_NAME_2));
+            table = t.toImmutableTable();
+            assertNotNull(table.getVector(INT_VECTOR_NAME_1));
+            assertNotNull(table.getVector(INT_VECTOR_NAME_2));
+            assertEquals(t.getSchema().findField(INT_VECTOR_NAME_1), table.getSchema().findField(INT_VECTOR_NAME_1));
+            assertEquals(0, t.rowCount);
+        } finally {
+            assertNotNull(table);
+            table.close();
         }
     }
 

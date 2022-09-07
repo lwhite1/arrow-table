@@ -164,17 +164,21 @@ public class Table extends BaseTable implements Iterable<Cursor> {
     }
 
     /**
-     * Returns a MutableTable from the data in this table
+     * Returns a MutableTable from the data in this table. Memory is transferred to the new table so this table
+     * can no longer be used
+     *
      * @return a new MutableTable
      */
     @Override
     public MutableTable toMutableTable() {
-        return new MutableTable(
+        MutableTable t = new MutableTable(
                 fieldVectors.stream().map(v -> {
                     TransferPair transferPair = v.getTransferPair(v.getAllocator());
                     transferPair.transfer();
                     return (FieldVector) transferPair.getTo();
                 }).collect(Collectors.toList())
         );
+        clear();
+        return t;
     }
 }

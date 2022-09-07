@@ -18,9 +18,9 @@ VectorSchemaRoot provides a thin wrapper on the FieldVectors has hold its data. 
 
 The rules aren't enforced by the API so it's up to the programmer to ensure they're followed. Failure to do so could lead to runtime exceptions. 
 
-_Table_ is immutable. The underlying vectors are not exposed. When a Table is created from existing vectors, memory is transferred so subsequent changes to the vectors don't impact the table's values.
+_Table_ is immutable. The underlying vectors are not exposed. When a Table is created from existing vectors, their memory is transferred to new vectors, so subsequent changes to the original vectors can't impact the table's values.
 
-_MutableTable_ has more general mutation support than VectorSchemaRoot. Values of any ArrowType can be modified at any time in any order. The process, however, may be too slow for some applications. Mutation is described in more detail below in the _Write Operations_ section.
+_MutableTable_ is mutable (surpise!). But its support for mutation is more general than VectorSchemaRoot. Values of any ArrowType can be modified at any time in any order. The process, however, may be too slow for some applications, so be sure to understand how it works. Mutation is described in more detail in the _Write Operations_ section.
 
 ## What's in a Table?
 Like VectorSchemaRoot, both Table and MutableTable consist of a Schema and a collection of FieldVector objects, and both are designed to be accessed via a row-oriented interface.
@@ -29,7 +29,7 @@ Like VectorSchemaRoot, both Table and MutableTable consist of a Schema and a col
 
 ### Creating a Table from a VectorSchemaRoot
 
-Tables are created from a VectorSchemaRoot as shown below. The data is transferred from the VectorSchemaRoot to the new Table, clearing the VectorSchemaRoot in the process. This ensures that the data in your new Table is never changed.
+Tables are created from a VectorSchemaRoot as shown below. The memory buffers holding the data are transferred from the VectorSchemaRoot to the new Table, clearing the VectorSchemaRoot in the process. This ensures that the data in your new Table is never changed.
 
 ```java
 VectorSchemaRoot vsr = getMyVsr(); 
@@ -45,7 +45,7 @@ VectorSchemaRoot vsr = getMyVsr();
 MutableTable t = new MutableTable(vsr);
 ```
 
-Again the memory is transferred to the table. MutableTables don't provide the benefits of immutability of course, but they *are* protected from external changes.
+Again the memory is transferred to the table. MutableTables don't provide the benefits of immutability of course, but they *are* protected from "back-door" changes to their vectors.
 
 #### Creating Tables with dictionary-encoded vectors
 
@@ -337,7 +337,7 @@ Note that the createion of ValueHolders for complex types is not entirely trivia
 
 ##### Appending new rows
 
-***TODO: this section is highly speculative. Add example code when available***
+***TODO: this section is speculative. Add example code when available***
 
 The *appendRow()* operation does two things:
 
@@ -349,6 +349,24 @@ After calling appendRow(), updates can be perfomed as usual.  See the section on
 ##### Limitations and unsupported operations
 
 Table does not currently support insertAt(index, value) operations, nor does it guarantee that row order remains consistent after update operations.  Both of these operations would be useful for anyone building an Arrow-native dataframe. 
+
+## Converting from Table to MutableTable (and back)
+
+To convert from a Table to a MutableTable:
+
+```java
+MutableTable aMutableTable = anImmutableTable.toMutableTable();
+```
+
+The source Table is cleared and the memory is transferred to the new table. 
+
+To convert from a MutableTable to a Table:
+
+```java
+Table aMutableTable = aMutableTable.toMutableTable();
+```
+
+Calling toMutableTable() on an instance of MutableTable returns that table unchanged. Similarly, calling toImmutableTable() on an instance of Table returns that table unchanged. 
 
 ## Converting a Table to a VectorSchemaRoot
 

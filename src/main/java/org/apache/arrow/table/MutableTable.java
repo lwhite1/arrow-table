@@ -244,19 +244,21 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
 
     /**
      * Returns a Table from the data in this table. Memory is transferred to the new table so this mutable table
-     * should not be used any more
+     * can no longer be used
      *
-     * @return a new Table containing the vectors in this table
+     * @return a new Table containing the data in this table
      */
     @Override
     public Table toImmutableTable() {
-        return new Table(
+        Table t = new Table(
                 fieldVectors.stream().map(v -> {
                     TransferPair transferPair = v.getTransferPair(v.getAllocator());
                     transferPair.transfer();
                     return (FieldVector) transferPair.getTo();
                 }).collect(Collectors.toList())
         );
+        clear();
+        return t;
     }
 
     @Override

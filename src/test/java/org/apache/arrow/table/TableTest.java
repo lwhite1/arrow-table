@@ -155,14 +155,19 @@ class TableTest {
 
     @Test
     void toMutableTable() {
+        MutableTable mutableTable = null;
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
             assertNotNull(t.getVector(INT_VECTOR_NAME_1));
             assertNotNull(t.getVector(INT_VECTOR_NAME_2));
-            MutableTable mutableTable = t.toMutableTable();
+            mutableTable = t.toMutableTable();
             assertNotNull(mutableTable.getVector(INT_VECTOR_NAME_1));
             assertNotNull(mutableTable.getVector(INT_VECTOR_NAME_2));
             assertEquals(t.getSchema().findField(INT_VECTOR_NAME_1), mutableTable.getSchema().findField(INT_VECTOR_NAME_1));
+            assertEquals(0, t.rowCount);
+        } finally {
+            assertNotNull(mutableTable);
+            mutableTable.close();
         }
     }
 
