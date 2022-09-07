@@ -61,11 +61,7 @@ class MutableTableTest {
     @Test
     void constructor() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
-        List<Field> fieldList = new ArrayList<>();
-        for (FieldVector v : vectorList) {
-            fieldList.add(v.getField());
-        }
-        try (MutableTable t = new MutableTable(fieldList, vectorList, 2)) {
+        try (MutableTable t = new MutableTable(vectorList, 2)) {
             assertEquals(2, t.getRowCount());
             assertEquals(2, t.getVectorCount());
         }
@@ -165,7 +161,8 @@ class MutableTableTest {
             IntVector v3 = new IntVector("3", intFieldType, allocator);
             MutableTable t2 = t.addVector(2, v3);
             assertEquals(3, t2.fieldVectors.size());
-            assertEquals(v3, t2.getVector(2));
+            assertTrue(t2.getVector("3").isNull(0));
+            assertTrue(t2.getVector("3").isNull(1));
             t2.close();
         }
     }
@@ -173,11 +170,16 @@ class MutableTableTest {
     @Test
     void removeVector() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
+        IntVector v2 = (IntVector) vectorList.get(1);
+        int val1 = v2.get(0);
+        int val2 = v2.get(1);
+
         try (MutableTable t = new MutableTable(vectorList)) {
-            IntVector v2 = (IntVector) t.getVector(1);
             MutableTable t2 = t.removeVector(0);
             assertEquals(1, t2.fieldVectors.size());
-            assertEquals(v2, t2.getVector(0));
+            assertEquals(val1, ((IntVector) t2.getVector(0)).get(0));
+            assertEquals(val2, ((IntVector) t2.getVector(0)).get(1));
+            t2.close();
         }
     }
 
@@ -213,6 +215,9 @@ class MutableTableTest {
             MutableTable slice = t.slice(1, 1);
             assertEquals(1, slice.rowCount);
             assertEquals(2, t.rowCount); // memory is copied for slice, not transferred
+            
+            // TODO: Demonstrate the interactions between the slices or lack thereof
+
             slice.close();
         }
     }
@@ -224,7 +229,7 @@ class MutableTableTest {
     void constructFromVsr() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (VectorSchemaRoot vsr = new VectorSchemaRoot(vectorList)) {
-            MutableTable table = MutableTable.from(vsr);
+            MutableTable table = new MutableTable(vsr);
             assertEquals(2, table.rowCount);
             assertEquals(0, vsr.getRowCount()); // memory is copied for slice, not transferred
             table.close();
@@ -238,10 +243,9 @@ class MutableTableTest {
     void concatenateVsr() {
         List<FieldVector> vectorList1 = twoIntColumns(allocator);
         List<FieldVector> vectorList2 = twoIntColumns(allocator);
-        try (
-                VectorSchemaRoot vsr = new VectorSchemaRoot(vectorList1);
-                VectorSchemaRoot vsr2 = new VectorSchemaRoot(vectorList2);
-        ) {
+        try (VectorSchemaRoot vsr = new VectorSchemaRoot(vectorList1);
+             VectorSchemaRoot vsr2 = new VectorSchemaRoot(vectorList2)) {
+
             List<VectorSchemaRoot> roots = new ArrayList<>();
             roots.add(vsr);
             roots.add(vsr2);

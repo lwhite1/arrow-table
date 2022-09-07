@@ -3,10 +3,9 @@ package org.apache.arrow.table;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.types.pojo.ArrowType;
-import org.apache.arrow.vector.types.pojo.Field;
-import org.apache.arrow.vector.types.pojo.FieldType;
-import org.apache.arrow.vector.types.pojo.Schema;
+import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.dictionary.Dictionary;
+import org.apache.arrow.vector.types.pojo.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,19 +18,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MutableCursorTest {
 
-    private final ArrowType intArrowType = new ArrowType.Int(32, true);
-    private final FieldType intFieldType = new FieldType(true, intArrowType, null);
-
     private BufferAllocator allocator;
-    private Schema schema1;
 
     @BeforeEach
     public void init() {
         allocator = new RootAllocator(Long.MAX_VALUE);
-        List<Field> fieldList = new ArrayList<>();
-        fieldList.add(new Field(INT_VECTOR_NAME_1, intFieldType, null));
-        fieldList.add(new Field(INT_VECTOR_NAME_2, intFieldType, null));
-        schema1 = new Schema(fieldList);
     }
 
     @Test
@@ -136,6 +127,38 @@ class MutableCursorTest {
     @Test
     void setVarCharByColumnName() {
         List<FieldVector> vectorList = intPlusVarcharColumns(allocator);
+        try (MutableTable t = new MutableTable(vectorList)) {
+            assertEquals(2, t.rowCount);
+            MutableCursor c = t.mutableCursor();
+            c.at(1);
+            assertEquals(2, c.getInt(0));
+            assertEquals("two", c.getVarChar(VARCHAR_VECTOR_NAME_1));
+            c.setVarChar(VARCHAR_VECTOR_NAME_1, "2");
+            c.at(1);
+            assertTrue(c.isRowDeleted());
+            c.at(2);
+            assertEquals("2", c.getVarChar(VARCHAR_VECTOR_NAME_1));
+
+            // ensure iteration works correctly
+            List<String> values = new ArrayList<>();
+            c.resetPosition();
+            while (c.hasNext()) {
+                c.next();
+                values.add(c.getVarChar(VARCHAR_VECTOR_NAME_1));
+            }
+            assertTrue(values.contains("one"));
+            assertTrue(values.contains("2"));
+            assertEquals(2, values.size());
+        }
+    }
+
+    @Test
+    void setVarCharByColumnNameUsingDictionary() {
+        List<FieldVector> vectorList = intPlusVarcharColumns(allocator);
+        VarCharVector v1 = (VarCharVector) vectorList.get(1);
+        Dictionary numbersDictionary = new Dictionary(v1,
+                new DictionaryEncoding(1L, false, new ArrowType.Int(8, true)));
+
         try (MutableTable t = new MutableTable(vectorList)) {
             assertEquals(2, t.rowCount);
             MutableCursor c = t.mutableCursor();

@@ -12,7 +12,6 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,36 +24,57 @@ class TableTest {
     private final FieldType intFieldType = new FieldType(true, intArrowType, null);
 
     private BufferAllocator allocator;
-    private Schema schema1;
 
     @BeforeEach
     public void init() {
         allocator = new RootAllocator(Long.MAX_VALUE);
-        List<Field> fieldList = new ArrayList<>();
-        fieldList.add(new Field(INT_VECTOR_NAME_1, intFieldType, null));
-        fieldList.add(new Field(INT_VECTOR_NAME_2, intFieldType, null));
-        schema1 = new Schema(fieldList);
     }
 
     @Test
     void of() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = Table.of(vectorList.toArray(new FieldVector[2]))) {
+            Cursor c = t.immutableCursor();
             assertEquals(2, t.getRowCount());
             assertEquals(2, t.getVectorCount());
+            IntVector intVector1 = (IntVector) vectorList.get(0);
+            assertEquals(INT_VECTOR_NAME_1, intVector1.getName());
+            c.at(0);
+
+            // Now test changes to the first vector
+            // first Table value is 1
+            assertEquals(1, c.getInt(INT_VECTOR_NAME_1));
+
+            // original vector is updated to set first value to 44
+            intVector1.setSafe(0, 44);
+            assertEquals(44, intVector1.get(0));
+
+            // first Table value is still 1 for the zeroth vector
+            assertEquals(1, c.getInt(0));
         }
     }
 
     @Test
     void constructor() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
-        List<Field> fieldList = new ArrayList<>();
-        for (FieldVector v : vectorList) {
-            fieldList.add(v.getField());
-        }
-        try (Table t = new Table(fieldList, vectorList, 2)) {
+        try (Table t = new Table(vectorList, 2)) {
             assertEquals(2, t.getRowCount());
             assertEquals(2, t.getVectorCount());
+            Cursor c = t.immutableCursor();
+            IntVector intVector1 = (IntVector) vectorList.get(0);
+            c.at(0);
+
+            // Now test changes to the first vector
+            // first Table value is 1
+            assertEquals(1, c.getInt(INT_VECTOR_NAME_1));
+
+            // original vector is updated to set first value to 44
+            intVector1.setSafe(0, 44);
+            assertEquals(44, intVector1.get(0));
+            assertEquals(44, ((IntVector) vectorList.get(0)).get(0));
+
+            // first Table value is still 1 for the zeroth vector
+            assertEquals(1, c.getInt(INT_VECTOR_NAME_1));
         }
     }
 
@@ -65,7 +85,8 @@ class TableTest {
             IntVector v3 = new IntVector("3", intFieldType, allocator);
             Table t2 = t.addVector(2, v3);
             assertEquals(3, t2.fieldVectors.size());
-            assertEquals(v3, t2.getVector(2));
+            assertTrue(t2.getVector("3").isNull(0));
+            assertTrue(t2.getVector("3").isNull(1));
             t2.close();
         }
     }
@@ -73,11 +94,15 @@ class TableTest {
     @Test
     void removeVector() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
+        IntVector v2 = (IntVector) vectorList.get(1);
+        int val1 = v2.get(0);
+        int val2 = v2.get(1);
         try (Table t = new Table(vectorList)) {
-            IntVector v2 = (IntVector) t.getVector(1);
+
             Table t2 = t.removeVector(0);
             assertEquals(1, t2.fieldVectors.size());
-            assertEquals(v2, t2.getVector(0));
+            assertEquals(val1, ((IntVector) t2.getVector(0)).get(0));
+            assertEquals(val2, ((IntVector) t2.getVector(0)).get(1));
         }
     }
 
@@ -102,6 +127,7 @@ class TableTest {
     /**
      * Tests explicit iterator
      */
+    @SuppressWarnings("WhileLoopReplaceableByForEach")
     @Test
     void iterator2() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
@@ -170,14 +196,38 @@ class TableTest {
 
     /**
      * Tests creation of a table from a vectorSchemaRoot
+     *
+     * Also tests that updates to the source Vectors do not impact the values in the Table
      */
     @Test
     void constructFromVsr() {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (VectorSchemaRoot vsr = new VectorSchemaRoot(vectorList)) {
-            Table t = Table.from(vsr);
+            Table t = new Table(vsr);
+            Cursor c = t.immutableCursor();
             assertEquals(2, t.rowCount);
             assertEquals(0, vsr.getRowCount()); // memory is copied for slice, not transferred
+            IntVector intVector1 = (IntVector) vectorList.get(0);
+            c.at(0);
+
+            // Now test changes to the first vector
+            // first Table value is 1
+            assertEquals(1, c.getInt(INT_VECTOR_NAME_1));
+
+            // original vector is updated to set first value to 44
+            intVector1.setSafe(0, 44);
+            assertEquals(44, intVector1.get(0));
+            assertEquals(44, ((IntVector) vsr.getVector(0)).get(0));
+
+            // first Table value is still 1 for the zeroth vector
+            assertEquals(1, c.getInt(INT_VECTOR_NAME_1));
+
+            // TEST FIELDS //
+            Schema schema = t.schema;
+            Field f1 = t.getField(INT_VECTOR_NAME_1);
+            FieldVector fv1 = vectorList.get(0);
+            assertEquals(f1, fv1.getField());
+            assertEquals(f1, schema.findField(INT_VECTOR_NAME_1));
             t.close();
         }
     }

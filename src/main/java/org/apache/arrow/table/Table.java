@@ -2,10 +2,7 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
-import org.apache.arrow.vector.types.pojo.Field;
-import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.TransferPair;
 
 import java.util.*;
@@ -24,52 +21,14 @@ public class Table extends BaseTable implements Iterable<Cursor> {
      * Constructs new instance containing each of the given vectors.
      */
     public Table(Iterable<FieldVector> vectors) {
-        this(
-                StreamSupport.stream(vectors.spliterator(), false).map(ValueVector::getField).collect(Collectors.toList()),
-                StreamSupport.stream(vectors.spliterator(), false).collect(Collectors.toList())
-        );
+        this(StreamSupport.stream(vectors.spliterator(), false).collect(Collectors.toList()));
     }
 
     /**
-     * Constructs a new instance containing the children of parent but not the parent itself.
+     * Constructs a new instance from vectors.
      */
-    public Table(FieldVector parent) {
-        this(parent.getField().getChildren(), parent.getChildrenFromFields(), parent.getValueCount());
-    }
-
-    /**
-     * Constructs a new instance containing the data from the argument. Vectors are shared
-     * between the Table and VectorSchemaRoot. Direct modification of those vectors
-     * is unsafe and should be avoided.
-     *
-     * @see Table#from(VectorSchemaRoot) for an alternative without data sharing (preferred)
-     *
-     * @param vsr  The VectorSchemaRoot providing data for this Table
-     */
-    public Table(VectorSchemaRoot vsr) {
-        this(vsr.getSchema(), vsr.getFieldVectors(), vsr.getRowCount());
-    }
-
-    /**
-     * Constructs a new instance containing the data from the argument. The VectorSchemaRoot
-     * is cleared in the process and its rowCount is set to 0. Memory used by the vectors
-     * in the VectorSchemaRoot is transferred to the table.
-     *
-     * @see Table#Table(VectorSchemaRoot) for an alternative where data is shared with the
-     * VectorSchemaRoot
-     *
-     * @param vsr  The VectorSchemaRoot providing data for this Table
-     */
-    public static Table from(VectorSchemaRoot vsr) {
-        Table table = new Table(vsr.getSchema(),
-                vsr.getFieldVectors().stream().map(v -> {
-                    TransferPair transferPair = v.getTransferPair(v.getAllocator());
-                    transferPair.transfer();
-                    return (FieldVector) transferPair.getTo();
-                }).collect(Collectors.toList()),
-                vsr.getRowCount());
-                vsr.clear();
-        return table;
+    public static Table of(FieldVector... vectors) {
+        return new Table(Arrays.stream(vectors).collect(Collectors.toList()));
     }
 
     /**
@@ -78,40 +37,43 @@ public class Table extends BaseTable implements Iterable<Cursor> {
      * All vectors must have the same value count. Although this is not checked, inconsistent counts may lead to
      * exceptions or other undefined behavior later.
      *
-     * @param fields       The types of each vector.
      * @param fieldVectors The data vectors (must be equal in size to <code>fields</code>.
      */
-    public Table(List<Field> fields, List<FieldVector> fieldVectors) {
-        this(new Schema(fields), fieldVectors, fieldVectors.size() == 0 ? 0 : fieldVectors.get(0).getValueCount());
+    public Table(List<FieldVector> fieldVectors) {
+        this(fieldVectors, fieldVectors.size() == 0 ? 0 : fieldVectors.get(0).getValueCount());
     }
 
     /**
      * Constructs a new instance.
      *
-     * @param fields       The types of each vector.
-     * @param fieldVectors The data vectors (must be equal in size to <code>fields</code>.
-     * @param rowCount     The number of rows contained.
-     */
-    public Table(List<Field> fields, List<FieldVector> fieldVectors, int rowCount) {
-        this(new Schema(fields), fieldVectors, rowCount);
-    }
-
-    /**
-     * Constructs a new instance.
-     *
-     * @param schema       The schema for the vectors.
      * @param fieldVectors The data vectors.
      * @param rowCount     The number of rows
      */
-    public Table(Schema schema, List<FieldVector> fieldVectors, int rowCount) {
-        super(schema, rowCount, fieldVectors);
+    public Table(List<FieldVector> fieldVectors, int rowCount) {
+        super(fieldVectors, rowCount);
     }
 
+/*
+    */
+/**
+     * Constructs a new instance containing the children of parent but not the parent itself.
+     *//*
+
+    public Table(FieldVector parent) {
+        this(parent.getField().getChildren(), parent.getChildrenFromFields(), parent.getValueCount());
+    }
+*/
+
     /**
-     * Constructs a new instance from vectors.
+     * Constructs a new instance containing the data from the argument. Vectors are shared
+     * between the Table and VectorSchemaRoot. Direct modification of those vectors
+     * is unsafe and should be avoided.
+     *
+     * @param vsr  The VectorSchemaRoot providing data for this Table
      */
-    public static Table of(FieldVector... vectors) {
-        return new Table(Arrays.stream(vectors).collect(Collectors.toList()));
+    public Table(VectorSchemaRoot vsr) {
+        this(vsr.getFieldVectors(), vsr.getRowCount());
+        vsr.clear();
     }
 
     /**

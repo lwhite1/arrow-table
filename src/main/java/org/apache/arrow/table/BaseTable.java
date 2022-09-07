@@ -41,24 +41,27 @@ public abstract class BaseTable implements AutoCloseable {
 
     /**
      * Constructs new instance with the given rowCount, and containing the schema and each of the given vectors.
-     * @param schema        the schema for this Table
-     * @param rowCount      the number of rows in the table
-     * @param fieldVectors  the FieldVectors containing the table's data
+     *
+     * @param fieldVectors the FieldVectors containing the table's data
+     * @param rowCount     the number of rows in the table
      */
-    public BaseTable(Schema schema, int rowCount, List<FieldVector> fieldVectors) {
-        if (schema.getFields().size() != fieldVectors.size()) {
-            throw new IllegalArgumentException("Fields must match field vectors. Found " +
-                    fieldVectors.size() + " vectors and " + schema.getFields().size() + " fields");
-        }
-        this.schema = schema;
+    public BaseTable(List<FieldVector> fieldVectors, int rowCount) {
+
         this.rowCount = rowCount;
-        this.fieldVectors = fieldVectors;
-        for (int i = 0; i < schema.getFields().size(); ++i) {
-            Field field = schema.getFields().get(i);
-            FieldVector vector = fieldVectors.get(i);
-            fieldVectorsMap.put(field, vector);
-            vector.setValueCount(rowCount);
+        this.fieldVectors = new ArrayList<>();
+        List<Field> fields = new ArrayList<>();
+        for (FieldVector fv : fieldVectors) {
+            TransferPair transferPair = fv.getTransferPair(fv.getAllocator());
+            transferPair.transfer();
+            FieldVector newVector = (FieldVector) transferPair.getTo();
+            newVector.setValueCount(rowCount);
+
+            Field newField = newVector.getField();
+            this.fieldVectors.add(newVector);
+            fields.add(newField);
+            fieldVectorsMap.put(newField, newVector);
         }
+        this.schema = new Schema(fields);
     }
 
     /**
@@ -212,6 +215,8 @@ public abstract class BaseTable implements AutoCloseable {
 
     /**
      * Returns the vector with the given name, or {@code null} if the name is not found. Names are case-sensitive.
+     *
+     * TODO: Consider whether we could avoid doing a linear search of the entries
      *
      * @param columnName   The name of the vector
      * @return the Vector with the given name, or null

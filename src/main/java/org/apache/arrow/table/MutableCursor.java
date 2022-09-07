@@ -1,14 +1,13 @@
 package org.apache.arrow.table;
 
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.UInt4Vector;
-import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.dictionary.Dictionary;
+import org.apache.arrow.vector.dictionary.DictionaryEncoder;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.holders.IntHolder;
 import org.apache.arrow.vector.holders.ValueHolder;
 import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
 import org.apache.arrow.vector.types.pojo.Field;
 
@@ -176,6 +175,8 @@ public class MutableCursor extends Cursor {
         VarCharVector v = (VarCharVector) table.getVector(columnIndex);
         Dictionary dictionary = dictionary(v);
         if (dictionary != null) {
+            ValueVector encodedVector = DictionaryEncoder.encode(v, dictionary);
+            ValueVector decodedVector = DictionaryEncoder.decode(v, dictionary);
             v.set(getRowNumber(), value.getBytes(getDefaultCharacterSet()));
             // TODO: Finish dictionary implementation
         } else {
@@ -315,12 +316,16 @@ public class MutableCursor extends Cursor {
         DictionaryEncoding dictionaryEncoding = field.getDictionary();
         if (dictionaryEncoding != null) {
             if (dictionaryProvider != null) {
-                return dictionaryProvider.lookup(dictionaryEncoding.getId());
+                Dictionary dictionary = dictionaryProvider.lookup(dictionaryEncoding.getId());
+                if (dictionary == null) {
+                    throw new IllegalStateException(
+                            String.format("Field %s is dictionary encoded, but no Dictionary for that field is present in the DictionaryProvider for this table", field.getName()));
+
+                }
             }
             else {
-                Dictionary dictionary = new Dictionary(vector, dictionaryEncoding);
-                dictionaryProvider = new DictionaryProvider.MapDictionaryProvider(dictionary);
-                return dictionary;
+                throw new IllegalStateException(
+                        String.format("Field %s is dictionary encoded, but no DictionaryProvider is present in the table.", field.getName()));
             }
         }
         return null;

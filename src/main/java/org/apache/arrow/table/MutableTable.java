@@ -6,7 +6,6 @@ import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
-import org.apache.arrow.vector.holders.ValueHolder;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.TransferPair;
@@ -42,70 +41,65 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      * Constructs new instance containing each of the given vectors.
      */
     public MutableTable(Iterable<FieldVector> vectors) {
-        this(
-                StreamSupport.stream(vectors.spliterator(), false).map(ValueVector::getField).collect(Collectors.toList()),
-                StreamSupport.stream(vectors.spliterator(), false).collect(Collectors.toList())
-        );
+        this(StreamSupport.stream(vectors.spliterator(), false).collect(Collectors.toList()));
     }
 
     /**
-     * Constructs a new instance containing the children of parent but not the parent itself.
+     * Constructs a new instance from vectors.
      */
+    public static MutableTable of(FieldVector... vectors) {
+        return new MutableTable(Arrays.stream(vectors).collect(Collectors.toList()));
+    }
+
+    /**
+     * Constructs new instance containing each of the given vectors.
+     */
+    public MutableTable(List<FieldVector> fieldVectors) {
+        this(fieldVectors, fieldVectors.size() == 0 ? 0 : fieldVectors.get(0).getValueCount());
+    }
+
+/*
+    */
+/**
+     * Constructs a new instance containing the children of parent but not the parent itself.
+     *//*
+
     public MutableTable(FieldVector parent) {
         this(parent.getField().getChildren(), parent.getChildrenFromFields(), parent.getValueCount());
     }
+*/
 
     /**
-     * Constructs a new instance containing the data from the argument.
+     * Constructs a new instance containing the data from the argument. The VectorSchemaRoot
+     * is cleared in the process and its rowCount is set to 0. Memory used by the vectors
+     * in the VectorSchemaRoot is transferred to the table.
      *
      * @param vsr  The VectorSchemaRoot providing data for this MutableTable
      */
     public MutableTable(VectorSchemaRoot vsr) {
-        this(vsr.getSchema(), vsr.getFieldVectors(), vsr.getRowCount());
+        this(vsr.getFieldVectors(), vsr.getRowCount());
+        vsr.clear();
     }
 
     /**
      * Constructs a new instance.
      *
-     * @param fields       The types of each vector.
-     * @param fieldVectors The data vectors (must be equal in size to <code>fields</code>.
-     */
-    public MutableTable(List<Field> fields, List<FieldVector> fieldVectors) {
-        this(new Schema(fields), fieldVectors, fieldVectors.size() == 0 ? 0 : fieldVectors.get(0).getValueCount());
-    }
-
-    /**
-     * Constructs a new instance.
-     *
-     * @param fields       The types of each vector.
-     * @param fieldVectors The data vectors (must be equal in size to <code>fields</code>.
-     * @param rowCount     The number of rows contained.
-     */
-    public MutableTable(List<Field> fields, List<FieldVector> fieldVectors, int rowCount) {
-        this(new Schema(fields), fieldVectors, rowCount);
-    }
-
-    /**
-     * Constructs a new instance.
-     *
-     * @param schema       The schema for the vectors.
      * @param fieldVectors The data vectors.
      * @param rowCount     The number of rows
      */
-    public MutableTable(Schema schema, List<FieldVector> fieldVectors, int rowCount) {
-        super(schema, rowCount, fieldVectors);
+    public MutableTable(List<FieldVector> fieldVectors, int rowCount) {
+        super(fieldVectors, rowCount);
     }
 
     /**
      * Constructs a new instance.
      *
-     * @param schema                The schema for the vectors.
      * @param fieldVectors          The data vectors.
      * @param rowCount              The number of rows
      * @param dictionaryProvider    The dictionary provider containing the dictionaries for any encoded column
      */
-    public MutableTable(Schema schema, List<FieldVector> fieldVectors, int rowCount, DictionaryProvider dictionaryProvider) {
-        super(schema, rowCount, fieldVectors);
+    public MutableTable(List<FieldVector> fieldVectors, int rowCount, DictionaryProvider dictionaryProvider) {
+        super(fieldVectors, rowCount);
         this.dictionaryProvider = dictionaryProvider;
     }
 
@@ -122,36 +116,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
             throw new IllegalArgumentException("The root vector did not create the right number of children. found " +
                     fieldVectors.size() + " expected " + schema.getFields().size());
         }
-        return new MutableTable(schema, fieldVectors, 0);
-    }
-
-    /**
-     * Constructs a new instance containing the data from the argument. The VectorSchemaRoot
-     * is cleared in the process and its rowCount is set to 0. Memory used by the vectors
-     * in the VectorSchemaRoot is transferred to the table.
-     *
-     * @see MutableTable#MutableTable(VectorSchemaRoot) for an alternative where data is shared with the
-     * VectorSchemaRoot
-     *
-     * @param vsr  The VectorSchemaRoot providing data for this Table
-     */
-    public static MutableTable from(VectorSchemaRoot vsr) {
-        MutableTable table = new MutableTable(vsr.getSchema(),
-                vsr.getFieldVectors().stream().map(v -> {
-                    TransferPair transferPair = v.getTransferPair(v.getAllocator());
-                    transferPair.transfer();
-                    return (FieldVector) transferPair.getTo();
-                }).collect(Collectors.toList()),
-                vsr.getRowCount());
-        vsr.clear();
-        return table;
-    }
-
-    /**
-     * Constructs a new instance from vectors.
-     */
-    public static MutableTable of(FieldVector... vectors) {
-        return new MutableTable(Arrays.stream(vectors).collect(Collectors.toList()));
+        return new MutableTable(fieldVectors, 0);
     }
 
     /**
