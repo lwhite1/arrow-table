@@ -132,7 +132,7 @@ try (Table t = new Table(vectorList)) {
 
 ## Slicing tables
 
-Both Table and MutableTable support *slice()* operations. A slice of a Table is another Table, and a slice of a MutableTable is a MutableTable. 
+Table supports *slice()* operations, where a slice of a source table is a second Table that refers to a single, contiguous range of rows in the source. 
 
 ```Java
 try (Table t = new Table(vectorList)) {
@@ -141,7 +141,7 @@ try (Table t = new Table(vectorList)) {
 }
 ```
 
-What if you created a slice of *all* the values in the original table?
+If you created a slice with *all* the values in the source table (as shown below), how would that differ from a new Table constructed with the same vectors as the source?
 
 ```Java
 try (Table t = new Table(vectorList)) {
@@ -150,15 +150,13 @@ try (Table t = new Table(vectorList)) {
 }
 ```
 
-The difference between creating a slice with all the data in the source Table, and constructing a new Table with the same vectors as the source Table, is that when you *construct* a new table, the buffers are transferred from the source to the destination. With a slice, both tables share the same underlying vectors. That's OK, though, since both Tables are immutable.  
+The difference is that when you *construct* a new table, the buffers are transferred from the source vectors to new vectors in the destination. With a slice, both tables share the same underlying vectors. That's OK, though, since both Tables are immutable.  
 
-### Slicing a MutableTable
-
-***TODO: this section is highly speculative. Add example code when available***
+Slices are not supported in MutableTables. 
 
 ## Row operations
 
-Row-based access is supported using a Cursor object. Cursor provides *get()* methods by both vector name and vector position, but no *set()* operations. A MutableCursor provides both *set()* and *get()* operations. MutableCursors are only available for MutableTables. If you are working with a MutableTable, however, you can use either a MutableCursor or an immutable Cursor to access the data.
+Row-based access is supported using a Cursor object. Cursor provides *get()* methods by both vector name and vector position, but no *set()* operations. A MutableCursor provides both *set()* and *get()* operations. MutableCursors are only available for MutableTables. If you are working with a MutableTable, however, you can use either a MutableCursor or a statndard immutable Cursor to access the data.
 
 ### Getting a cursor
 
@@ -228,7 +226,7 @@ int row = c.getRowNumber(); // 101
 
 ### Write operations using cursors
 
-A MutableTables can be modified through its MutableCursor. You can:
+A MutableTable can be modified through its MutableCursor. You can:
 
 - append records
 - update values in any row

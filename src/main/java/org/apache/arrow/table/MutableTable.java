@@ -1,7 +1,6 @@
 package org.apache.arrow.table;
 
 import org.apache.arrow.memory.BufferAllocator;
-import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
@@ -334,44 +333,6 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      */
     public MutableCursor mutableCursor(Charset defaultCharset) {
         return new MutableCursor(this, defaultCharset);
-    }
-
-    /**
-     * Slice this table from desired index. Memory is NOT transferred from the vectors in this table to new vectors in
-     * the target table. This table is unchanged.
-     *
-     * @param index start position of the slice
-     * @return the sliced table
-     */
-    public MutableTable slice(int index) {
-        return slice(index, this.rowCount - index);
-    }
-
-    /**
-     * Slice this table at desired index and length. Memory is NOT transferred from the vectors in this table to new
-     * vectors in the target table. This table is unchanged.
-     *
-     * @param index start position of the slice
-     * @param length length of the slice
-     * @return the sliced table
-     */
-    public MutableTable slice(int index, int length) {
-        Preconditions.checkArgument(index >= 0, "expecting non-negative index");
-        Preconditions.checkArgument(length >= 0, "expecting non-negative length");
-        Preconditions.checkArgument(index + length <= rowCount,
-                "index + length should <= rowCount");
-
-        if (index == 0 && length == rowCount) {
-            return this;
-        }
-
-        List<FieldVector> sliceVectors = fieldVectors.stream().map(v -> {
-            TransferPair transferPair = v.getTransferPair(v.getAllocator());
-            transferPair.splitAndTransfer(index, length);
-            return (FieldVector) transferPair.getTo();
-        }).collect(Collectors.toList());
-
-        return new MutableTable(sliceVectors);
     }
 
     /**
