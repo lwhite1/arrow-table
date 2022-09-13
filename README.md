@@ -1,12 +1,10 @@
-
-
 # Working with Tables
 
 **NOTE**: This API is experimental and subject to change.
 
 Like VectorSchemaRoot, *Table* and *MutableTable* are tabular data structures backed by Arrow arrays. They differ from VectorSchemaRoot mainly in that they lack its support for batch operations. Anyone processing batches of tabular data in a pipeline should continue to use VectorSchemaRoot. Table and MutableTable also differ from VectorSchemaRoot in their mutation semantics.
 
-## Mutation semantics
+## Mutation in tables and VectorSchemaRoot
 
 VectorSchemaRoot provides a thin wrapper on the FieldVectors has hold its data. These vectors have "set" methods, and they can be accessed through the table, but their use is subject to rules documented in the ValueVector class: 
 
@@ -16,20 +14,20 @@ VectorSchemaRoot provides a thin wrapper on the FieldVectors has hold its data. 
 - you must call setValueCount before a vector can be read
 - you should never write to a vector once it has been read.
 
-The rules aren't enforced by the API so it's up to the programmer to ensure they're followed. Failure to do so could lead to runtime exceptions. 
+The rules aren't enforced by the API so it's the programmer's job to ensure they're followed. Failure to do so could lead to runtime exceptions. 
 
-_Table_ is immutable. The underlying vectors are not exposed. When a Table is created from existing vectors, their memory is transferred to new vectors, so subsequent changes to the original vectors can't impact the table's values.
+_Table_, on the other hand, is immutable. The underlying vectors are not exposed. When a Table is created from existing vectors, their memory is transferred to new vectors, so subsequent changes to the original vectors can't impact the new table's values.
 
-_MutableTable_ is mutable (surpise!). But its support for mutation is more general than VectorSchemaRoot. Values of any ArrowType can be modified at any time in any order. The process, however, may be too slow for some applications, so be sure to understand how it works. Mutation is described in more detail in the _Write Operations_ section.
+_MutableTable_ is mutable (surpise!). But its support for mutation is more general than VectorSchemaRoot. Values of any ArrowType can be modified at any time in any order. The process, however, may not be efficient enough for some applications, so be sure to understand how it works before using it. Mutation is described in detail in the _Write Operations_ section.
 
 ## What's in a Table?
-Like VectorSchemaRoot, both Table and MutableTable consist of a Schema and a collection of FieldVector objects, and both are designed to be accessed via a row-oriented interface.
+Like VectorSchemaRoot, both Table and MutableTable consist of a Schema and a collection of FieldVector objects, and both table implementations are designed to be accessed via a row-oriented interface.
 
 ## Creating Tables
 
 ### Creating a Table from a VectorSchemaRoot
 
-Tables are created from a VectorSchemaRoot as shown below. The memory buffers holding the data are transferred from the VectorSchemaRoot to the new Table, clearing the VectorSchemaRoot in the process. This ensures that the data in your new Table is never changed.
+Tables are created from a VectorSchemaRoot as shown below. The memory buffers holding the data are transferred from the VectorSchemaRoot to new vectors in the new Table, clearing the original VectorSchemaRoot in the process. This ensures that the data in your new Table is never changed.
 
 ```java
 VectorSchemaRoot vsr = getMyVsr(); 
@@ -63,7 +61,7 @@ How dictionaries are used is described below.
 
 ### Creating a Table from ValueVectors
 
-It is rarely a good idea to share vectors between multiple VectorSchemaRoots, and it would not be a good idea to share them between VectorSchemaRoots and tables. Creating a VectorSchemaRoot from a list of vectors does not cause the reference counts for the vectors to be incremented. Unless you manage it manually, the code shown below would lead to more references than reference counts, which could lead to trouble. There is an implicit assumption that the vectors were created for use by *one* VectorSchemaRoot. 
+It is rarely a good idea to share vectors between multiple VectorSchemaRoots, and it would not be a good idea to share them between VectorSchemaRoots and tables. Creating a VectorSchemaRoot from a list of vectors does not cause the reference counts for the vectors to be incremented. Unless you manage it manually, the code shown below would lead to more references to the vectors than reference counts, and that could lead to trouble. There is an implicit assumption that the vectors were created for use by *one* VectorSchemaRoot that this code violates.  
 
 *Don't do this:*
 
@@ -75,18 +73,18 @@ VectorSchemaRoot vsr2 = new VectorSchemaRoot(myVector);
 vsr2.clear(); // Reference count for myVector is 0.
 ```
 
-What is happening is that the reference counter works at a lower level than the VectorSchemaRoot interface. A reference counter counts references to ArrowBuf instances that control memory buffers. It doesn't count references to the ValueVectors that hold *them*. In the examaple above, each ArrowBuf is held by one ValueVector, so there is only one reference. This gets a little blurry, though, when you call the VectorSchemaRoot's clear() method, which frees the memory held by each of the vectors it references, even though another instance might refer to the same vectors. 
+What is happening is that the reference counter works at a lower level than the VectorSchemaRoot interface. A reference counter counts references to ArrowBuf instances that control memory buffers. It doesn't count references to the ValueVectors that hold *them*. In the examaple above, each ArrowBuf is held by one ValueVector, so there is only one reference. This gets a little blurry, though, when you call the VectorSchemaRoot's clear() method, which frees the memory held by each of the vectors it references even though another instance might refer to the same vectors. 
 
 When you create Tables from vectors, it's assumed that there are no external references to those vectors. But, just to be on the safe side, the buffers underlying these vectors are transferred to new ValueVectors in the new Table, and the original vectors are cleared.  
 
 *Don't do this either, but understand the difference from above:*
 
 ```Java
-IntVector myVector = createMyIntVector();  // Reference count for myVector = 1
-Table vsr1 = new Table(myVector);          // Still one reference
-Table vsr2 = new Table(myVector); 
-// Still 1. The vector held by vsr1 was cleared and its buffers transferred to a new vector.
-vsr2.clear(); // Reference count for myVector is 0.
+IntVector myVector = createMyIntVector(); // Reference count for myVector = 1
+Table t1 = new Table(myVector);  // myVector is cleared; a new hidden vector has its data
+Table t2 = new Table(myVector);  // t2 has no rows because the source vector was cleared
+																 // t1 continues to have the data from the original vector
+t2.clear();                      // no change because t2 is already empty and t1 is independent
 ```
 
 With Tables, memory is explicitly transferred on instantiatlon so the buffers are held by that table are held by *only* that table. 
@@ -215,14 +213,51 @@ int age101 = c.at(101) // change position directly to 101
 
 ### Read operations using cursors
 
-In addition to getting values, you can check if a value is null using `isNull()`. 
+Methods are available for getting values by vector name and vector index, where index is the 0-based position of the vector in the table. For example, assuming 'age' is the 13th vector in 'table', the following two gets are equivalent:
 
 ```java
 Cursor c = table.immutableCursor(); 
-int age101 = c.get("age");
-boolean name101isNull = c.isNull("name");
-int row = c.getRowNumber(); // 101
+c.next(); // position the cursor at the first value
+int age1 = c.get("age"); // gets the value of vector named 'age' in the table at row 0
+int age2 = c.get(12);    // gets the value of the 13th vecto in the table at row 0
 ```
+
+In addition to getting values, you can check if a value is null using `isNull()` and you can get the current row number: 
+
+```java
+boolean name0isNull = cursor.isNull("name");
+int row = cursor.getRowNumber(); // 0
+```
+
+Note that while there are getters for most vector types (e.g. *getInt()* for use with IntVector) and a generic *isNull()* method, there is no *getNull()* method for use with the NullVector type or *getZero()* for use with ZeroVector (a zero-length vector of any type).
+
+#### Reading VarChars and LargeVarChars
+
+Strings in arrow are represented as byte arrays, encoded with a particular Charset object. There are two ways to handle Charset in the getters. One uses the default Charset for decoding; the other takes a charset as an argument to the getter:
+
+```Java
+String v1 = cursor.get("first_name");  // uses the default encoding for the table
+
+String v2 = cursor.get("first_name", StandardCharsets.US_ASCII); // specifies the encoding
+```
+
+What the default coding is will depend on how the Cursor was constructed. If you use:
+
+```Java
+Cursor c = table.immutableCursor(); 
+// or
+MutableCursor c = table.mutableCursor(); 
+```
+
+Then the default encoding is set as StandardCharsets.UTF_8.  However, you can also provide a default charset when you create the cursor. 
+
+```java
+Cursor c = table.immutableCursor(StandardCharsets.US_ASCII); 
+// or
+MutableCursor c = table.mutableCursor(StandardCharsets.US_ASCII); 
+```
+
+Now US_ASCII will be used whenever you get a String value without specifying a Charset in the getter.  
 
 ### Write operations using cursors
 
@@ -414,3 +449,4 @@ try (Table t = new Table(vectorList);
 }
 ```
 
+TODO: Consider adding support for actually copying data from one Table to another. 
