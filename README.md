@@ -231,6 +231,15 @@ int row = cursor.getRowNumber(); // 0
 
 Note that while there are getters for most vector types (e.g. *getInt()* for use with IntVector) and a generic *isNull()* method, there is no *getNull()* method for use with the NullVector type or *getZero()* for use with ZeroVector (a zero-length vector of any type).
 
+#### Reading Objects
+
+For any given vector type, the basic *get()* method returns a primitive value. For example, *getTimeStampMicro()* returns a long value that encodes the timestamp. To get the LocalDateTime object representing that timestamp in Java, another method with 'Obj' appended to the name is provided.  For example: 
+
+```java
+long ts = cursor.getTimeStampMicro();
+LocalDateTime tsObject = cursor.getTimeStampMicroObj();
+```
+
 #### Reading VarChars and LargeVarChars
 
 Strings in arrow are represented as byte arrays, encoded with a particular Charset object. There are two ways to handle Charset in the getters. One uses the default Charset for decoding; the other takes a charset as an argument to the getter:
