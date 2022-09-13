@@ -238,10 +238,20 @@ public abstract class BaseTable implements AutoCloseable {
         return fieldVectors.get(columnIndex);
     }
 
+    /**
+     * Returns an immutable Cursor object holding a reference to this table. The default character encoding used by the
+     * cursor to decode Strings will be StandardCharsets.UTF_8
+     */
     public Cursor immutableCursor() {
         return new Cursor(this);
     }
 
+    /**
+     * Returns an immutable Cursor object holding a reference to this table
+     *
+     * @param defaultCharset The default character encoding used by the cursor to decode Strings. It can be overridden
+     *                       for individual vectors in the get() method
+     */
     public Cursor immutableCursor(Charset defaultCharset) {
         return new Cursor(this, defaultCharset);
     }

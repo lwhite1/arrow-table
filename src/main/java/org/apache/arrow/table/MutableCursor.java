@@ -82,6 +82,7 @@ public class MutableCursor extends Cursor {
     public MutableCursor setNull(String columnName) {
         FieldVector v = table.getVector(columnName);
         // TODO: Real implementation (without casts) after fixing setNull issue
+        // TODO: Handle the null vector as a special case
         if (v instanceof IntVector) {
             ((IntVector) v).setNull(getRowNumber());
         }
