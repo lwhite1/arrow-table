@@ -89,7 +89,7 @@ class MutableTableTest {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (MutableTable t = new MutableTable(vectorList)) {
             MutableCursor c = t.mutableCursor();
-            c.at(0);
+            c.setPosition(0);
             assertFalse(c.isRowDeleted());
             c.deleteCurrentRow();
             assertTrue(c.isRowDeleted());
@@ -126,10 +126,10 @@ class MutableTableTest {
             v.set(2, 3);
             t.setRowCount(3);
             MutableCursor c = t.mutableCursor();
-            c.at(1).deleteCurrentRow();
+            c.setPosition(1).deleteCurrentRow();
             assertTrue(t.isRowDeleted(1));
 
-            c.at(-1);
+            c.setPosition(-1);
             List<Integer> values = new ArrayList<>();
             while(c.hasNext()) {
                 c.next();
