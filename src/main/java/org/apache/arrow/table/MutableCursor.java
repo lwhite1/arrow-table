@@ -11,6 +11,7 @@ import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
 import org.apache.arrow.vector.types.pojo.Field;
 
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -690,6 +691,62 @@ public class MutableCursor extends Cursor {
      */
     public MutableCursor setFloat8(String columnName, NullableFloat8Holder value) {
         Float8Vector v = (Float8Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setDuration(int columnIndex, ArrowBuf value) {
+        DurationVector v = (DurationVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setDuration(String columnName, ArrowBuf value) {
+        DurationVector v = (DurationVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setDuration(int columnIndex, NullableDurationHolder value) {
+        DurationVector v = (DurationVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setDuration(String columnName, NullableDurationHolder value) {
+        DurationVector v = (DurationVector) table.getVector(columnName);
         v.setSafe(getRowNumber(), value);
         return this;
     }
@@ -1584,6 +1641,34 @@ public class MutableCursor extends Cursor {
      *
      * @return this MutableCursor for chaining operations
      */
+    public MutableCursor setDecimal(String columnName, BigDecimal value) {
+        DecimalVector v = (DecimalVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setDecimal(int columnIndex, BigDecimal value) {
+        DecimalVector v = (DecimalVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
     public MutableCursor setDecimal(String columnName, NullableDecimalHolder value) {
         DecimalVector v = (DecimalVector) table.getVector(columnName);
         v.setSafe(getRowNumber(), value);
@@ -1710,7 +1795,7 @@ public class MutableCursor extends Cursor {
      *
      * @return this MutableCursor for method chaining
      */
-    public MutableCursor setFixedSizeBinary(int columnIndex, int value) {
+    public MutableCursor setBit(int columnIndex, int value) {
         BitVector v = (BitVector) table.getVector(columnIndex);
         v.setSafe(getRowNumber(), value);
         return this;
@@ -1724,7 +1809,7 @@ public class MutableCursor extends Cursor {
      *
      * @return this MutableCursor for chaining operations
      */
-    public MutableCursor setFixedSizeBinary(String columnName, int value) {
+    public MutableCursor setBit(String columnName, int value) {
         BitVector v = (BitVector) table.getVector(columnName);
         v.setSafe(getRowNumber(), value);
         return this;
@@ -1932,9 +2017,17 @@ public class MutableCursor extends Cursor {
                 byte[] fixedSizeBinaryValue = ((FixedSizeBinaryVector) v).get(fromRow);
                 ((FixedSizeBinaryVector) v).setSafe(toRow, fixedSizeBinaryValue);
                 return;
+            case DURATION:
+                ArrowBuf durationValue = ((DurationVector) v).get(fromRow);
+                ((DurationVector) v).setSafe(toRow, durationValue);
+                return;
             case VARBINARY:
                 byte[] varBinaryValue = ((VarBinaryVector) v).get(fromRow);
                 ((VarBinaryVector) v).setSafe(toRow, varBinaryValue);
+                return;
+            case LARGEVARBINARY:
+                byte[] largeVarBinaryValue = ((LargeVarBinaryVector) v).get(fromRow);
+                ((LargeVarBinaryVector) v).setSafe(toRow, largeVarBinaryValue);
                 return;
             case BIT:
                 int bitValue = ((BitVector) v).get(fromRow);
