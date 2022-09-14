@@ -21,7 +21,7 @@ import java.util.Map;
  *
  * If a row in a table is marked as deleted, it is skipped when iterating.
  * TODO: Check for missing fixed-with type setters
- * TODO: Alternate setters(Object, ValueHolder)
+ * TODO: Alternate setters(Object, (non-nullable) ValueHolder)
  */
 public class MutableCursor extends Cursor {
 
