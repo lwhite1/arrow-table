@@ -5,8 +5,7 @@ import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.dictionary.Dictionary;
 import org.apache.arrow.vector.dictionary.DictionaryEncoder;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
-import org.apache.arrow.vector.holders.IntHolder;
-import org.apache.arrow.vector.holders.ValueHolder;
+import org.apache.arrow.vector.holders.*;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
 import org.apache.arrow.vector.types.pojo.Field;
@@ -20,7 +19,8 @@ import java.util.Map;
  * MutableCursor is a positionable, mutable cursor backed by a {@link MutableTable}.
  *
  * If a row in a table is marked as deleted, it is skipped when iterating.
- *
+ * TODO: Check for missing fixed-with type setters
+ * TODO: Alternate setters(Object, ValueHolder)
  */
 public class MutableCursor extends Cursor {
 
@@ -142,6 +142,118 @@ public class MutableCursor extends Cursor {
      *
      * @return this MutableCursor for method chaining
      */
+    public MutableCursor setTinyInt(int columnIndex, byte value) {
+        TinyIntVector v = (TinyIntVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTinyInt(String columnName, byte value) {
+        TinyIntVector v = (TinyIntVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTinyInt(int columnIndex, NullableTinyIntHolder value) {
+        TinyIntVector v = (TinyIntVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTinyInt(String columnName, NullableTinyIntHolder value) {
+        TinyIntVector v = (TinyIntVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setSmallInt(int columnIndex, short value) {
+        SmallIntVector v = (SmallIntVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setSmallInt(String columnName, short value) {
+        SmallIntVector v = (SmallIntVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setSmallInt(int columnIndex, NullableSmallIntHolder value) {
+        SmallIntVector v = (SmallIntVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setSmallInt(String columnName, NullableSmallIntHolder value) {
+        SmallIntVector v = (SmallIntVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
     public MutableCursor setInt(int columnIndex, int value) {
         IntVector v = (IntVector) table.getVector(columnIndex);
         v.setSafe(getRowNumber(), value);
@@ -163,6 +275,216 @@ public class MutableCursor extends Cursor {
     }
 
     /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setInt(int columnIndex, NullableIntHolder value) {
+        IntVector v = (IntVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setInt(String columnName, NullableIntHolder value) {
+        IntVector v = (IntVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setBigInt(int columnIndex, long value) {
+        BigIntVector v = (BigIntVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setBigInt(String columnName, long value) {
+        BigIntVector v = (BigIntVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setBigInt(int columnIndex, NullableBigIntHolder value) {
+        BigIntVector v = (BigIntVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setBigInt(String columnName, NullableBigIntHolder value) {
+        BigIntVector v = (BigIntVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setUInt1(int columnIndex, byte value) {
+        UInt1Vector v = (UInt1Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setUInt1(String columnName, byte value) {
+        UInt1Vector v = (UInt1Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setUInt1(int columnIndex, NullableUInt1Holder value) {
+        UInt1Vector v = (UInt1Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setUInt1(String columnName, NullableUInt1Holder value) {
+        UInt1Vector v = (UInt1Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setUInt2(int columnIndex, short value) {
+        UInt2Vector v = (UInt2Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setUInt2(String columnName, short value) {
+        UInt2Vector v = (UInt2Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setUInt2(int columnIndex, NullableUInt2Holder value) {
+        UInt2Vector v = (UInt2Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setUInt2(String columnName, NullableUInt2Holder value) {
+        UInt2Vector v = (UInt2Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setUInt4(int columnIndex, int value) {
+        UInt4Vector v = (UInt4Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
      * Sets the value of the column with the given name at this MutableCursor to the given value. An
      * IllegalStateException is thrown if the column is not present in the MutableCursor and an
      * IllegalArgumentException is thrown if it has a different type to that named in the method
@@ -172,6 +494,1238 @@ public class MutableCursor extends Cursor {
      */
     public MutableCursor setUInt4(String columnName, int value) {
         UInt4Vector v = (UInt4Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setUInt4(int columnIndex, NullableUInt4Holder value) {
+        UInt4Vector v = (UInt4Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setUInt4(String columnName, NullableUInt4Holder value) {
+        UInt4Vector v = (UInt4Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setUInt8(int columnIndex, long value) {
+        UInt8Vector v = (UInt8Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setUInt8(String columnName, long value) {
+        UInt8Vector v = (UInt8Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setUInt8(int columnIndex, NullableUInt8Holder value) {
+        UInt8Vector v = (UInt8Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setUInt8(String columnName, NullableUInt8Holder value) {
+        UInt8Vector v = (UInt8Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setFloat4(int columnIndex, float value) {
+        Float4Vector v = (Float4Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setFloat4(String columnName, float value) {
+        Float4Vector v = (Float4Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setFloat4(int columnIndex, NullableFloat4Holder value) {
+        Float4Vector v = (Float4Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setFloat4(String columnName, NullableFloat4Holder value) {
+        Float4Vector v = (Float4Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setFloat8(int columnIndex, double value) {
+        Float8Vector v = (Float8Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setFloat8(String columnName, double value) {
+        Float8Vector v = (Float8Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setFloat8(int columnIndex, NullableFloat8Holder value) {
+        Float8Vector v = (Float8Vector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setFloat8(String columnName, NullableFloat8Holder value) {
+        Float8Vector v = (Float8Vector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setIntervalDay(int columnIndex, ArrowBuf value) {
+        IntervalDayVector v = (IntervalDayVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setIntervalDay(String columnName, ArrowBuf value) {
+        IntervalDayVector v = (IntervalDayVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+  /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setIntervalDay(int columnIndex, NullableIntervalDayHolder value) {
+        IntervalDayVector v = (IntervalDayVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setIntervalDay(String columnName, NullableIntervalDayHolder value) {
+        IntervalDayVector v = (IntervalDayVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setIntervalYear(int columnIndex, int value) {
+        IntervalYearVector v = (IntervalYearVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setIntervalYear(String columnName, int value) {
+        IntervalYearVector v = (IntervalYearVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setIntervalYear(int columnIndex, NullableIntervalYearHolder value) {
+        IntervalYearVector v = (IntervalYearVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setIntervalYear(String columnName, NullableIntervalYearHolder value) {
+        IntervalYearVector v = (IntervalYearVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setIntervalMonthDayNano(int columnIndex, ArrowBuf value) {
+        IntervalMonthDayNanoVector v = (IntervalMonthDayNanoVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setIntervalMonthDayNano(String columnName, ArrowBuf value) {
+        IntervalMonthDayNanoVector v = (IntervalMonthDayNanoVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setIntervalMonthDayNano(int columnIndex, NullableIntervalMonthDayNanoHolder value) {
+        IntervalMonthDayNanoVector v = (IntervalMonthDayNanoVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setIntervalMonthDayNano(String columnName, NullableIntervalMonthDayNanoHolder value) {
+        IntervalMonthDayNanoVector v = (IntervalMonthDayNanoVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeNano(int columnIndex, long value) {
+        TimeNanoVector v = (TimeNanoVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeNano(String columnName, long value) {
+        TimeNanoVector v = (TimeNanoVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeNano(int columnIndex, NullableTimeNanoHolder value) {
+        TimeNanoVector v = (TimeNanoVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeNano(String columnName, NullableTimeNanoHolder value) {
+        TimeNanoVector v = (TimeNanoVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeMicro(int columnIndex, long value) {
+        TimeMicroVector v = (TimeMicroVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeMicro(String columnName, long value) {
+        TimeMicroVector v = (TimeMicroVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeMicro(int columnIndex, NullableTimeMicroHolder value) {
+        TimeMicroVector v = (TimeMicroVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeMicro(String columnName, NullableTimeMicroHolder value) {
+        TimeMicroVector v = (TimeMicroVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeMilli(int columnIndex, int value) {
+        TimeMilliVector v = (TimeMilliVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeMilli(String columnName, int value) {
+        TimeMilliVector v = (TimeMilliVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeMilli(int columnIndex, NullableTimeMilliHolder value) {
+        TimeMilliVector v = (TimeMilliVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeMilli(String columnName, NullableTimeMilliHolder value) {
+        TimeMilliVector v = (TimeMilliVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeSec(int columnIndex, int value) {
+        TimeSecVector v = (TimeSecVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeSec(String columnName, int value) {
+        TimeSecVector v = (TimeSecVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeSec(int columnIndex, NullableTimeSecHolder value) {
+        TimeSecVector v = (TimeSecVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeSec(String columnName, NullableTimeSecHolder value) {
+        TimeSecVector v = (TimeSecVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampNano(int columnIndex, long value) {
+        TimeStampNanoVector v = (TimeStampNanoVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampNano(String columnName, long value) {
+        TimeStampNanoVector v = (TimeStampNanoVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampNano(int columnIndex, NullableTimeStampNanoHolder value) {
+        TimeStampNanoVector v = (TimeStampNanoVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampNano(String columnName, NullableTimeStampNanoHolder value) {
+        TimeStampNanoVector v = (TimeStampNanoVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampMicro(int columnIndex, long value) {
+        TimeStampMicroVector v = (TimeStampMicroVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampMicro(String columnName, long value) {
+        TimeStampMicroVector v = (TimeStampMicroVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampMicro(int columnIndex, NullableTimeStampMicroHolder value) {
+        TimeStampMicroVector v = (TimeStampMicroVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampMicro(String columnName, NullableTimeStampMicroHolder value) {
+        TimeStampMicroVector v = (TimeStampMicroVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampMilli(int columnIndex, long value) {
+        TimeStampMilliVector v = (TimeStampMilliVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampMilli(String columnName, long value) {
+        TimeStampMilliVector v = (TimeStampMilliVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampMilli(int columnIndex, NullableTimeStampMilliHolder value) {
+        TimeStampMilliVector v = (TimeStampMilliVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampMilli(String columnName, NullableTimeStampMilliHolder value) {
+        TimeStampMilliVector v = (TimeStampMilliVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampSec(int columnIndex, long value) {
+        TimeStampSecVector v = (TimeStampSecVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampSec(String columnName, long value) {
+        TimeStampSecVector v = (TimeStampSecVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampSec(int columnIndex, NullableTimeStampSecHolder value) {
+        TimeStampSecVector v = (TimeStampSecVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampSec(String columnName, NullableTimeStampSecHolder value) {
+        TimeStampSecVector v = (TimeStampSecVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampNanoTZ(int columnIndex, long value) {
+        TimeStampNanoTZVector v = (TimeStampNanoTZVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampNanoTZ(String columnName, long value) {
+        TimeStampNanoTZVector v = (TimeStampNanoTZVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampNanoTZ(int columnIndex, NullableTimeStampNanoTZHolder value) {
+        TimeStampNanoTZVector v = (TimeStampNanoTZVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampNanoTZ(String columnName, NullableTimeStampNanoTZHolder value) {
+        TimeStampNanoTZVector v = (TimeStampNanoTZVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampMicroTZ(int columnIndex, long value) {
+        TimeStampMicroTZVector v = (TimeStampMicroTZVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampMicroTZ(String columnName, long value) {
+        TimeStampMicroTZVector v = (TimeStampMicroTZVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampMicroTZ(int columnIndex, NullableTimeStampMicroTZHolder value) {
+        TimeStampMicroTZVector v = (TimeStampMicroTZVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampMicroTZ(String columnName, NullableTimeStampMicroTZHolder value) {
+        TimeStampMicroTZVector v = (TimeStampMicroTZVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampMilliTZ(int columnIndex, long value) {
+        TimeStampMilliTZVector v = (TimeStampMilliTZVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampMilliTZ(String columnName, long value) {
+        TimeStampMilliTZVector v = (TimeStampMilliTZVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampMilliTZ(int columnIndex, NullableTimeStampMilliTZHolder value) {
+        TimeStampMilliTZVector v = (TimeStampMilliTZVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampMilliTZ(String columnName, NullableTimeStampMilliTZHolder value) {
+        TimeStampMilliTZVector v = (TimeStampMilliTZVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampSecTZ(int columnIndex, long value) {
+        TimeStampSecTZVector v = (TimeStampSecTZVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampTZSec(String columnName, long value) {
+        TimeStampSecTZVector v = (TimeStampSecTZVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setTimeStampSecTZ(int columnIndex, NullableTimeStampSecTZHolder value) {
+        TimeStampSecTZVector v = (TimeStampSecTZVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setTimeStampTZSec(String columnName, NullableTimeStampSecTZHolder value) {
+        TimeStampSecTZVector v = (TimeStampSecTZVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setDecimal(int columnIndex, ArrowBuf value) {
+        DecimalVector v = (DecimalVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setDecimal(String columnName, ArrowBuf value) {
+        DecimalVector v = (DecimalVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setDecimal(int columnIndex, NullableDecimalHolder value) {
+        DecimalVector v = (DecimalVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setDecimal(String columnName, NullableDecimalHolder value) {
+        DecimalVector v = (DecimalVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setDateMilli(int columnIndex, long value) {
+        DateMilliVector v = (DateMilliVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setDateMilli(String columnName, long value) {
+        DateMilliVector v = (DateMilliVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setDateMilli(int columnIndex, NullableDateMilliHolder value) {
+        DateMilliVector v = (DateMilliVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setDateMilli(String columnName, NullableDateMilliHolder value) {
+        DateMilliVector v = (DateMilliVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setFixedSizeBinary(int columnIndex, byte[] value) {
+        FixedSizeBinaryVector v = (FixedSizeBinaryVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setFixedSizeBinary(String columnName, byte[] value) {
+        FixedSizeBinaryVector v = (FixedSizeBinaryVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setFixedSizeBinary(int columnIndex, NullableFixedSizeBinaryHolder value) {
+        FixedSizeBinaryVector v = (FixedSizeBinaryVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setFixedSizeBinary(String columnName, NullableFixedSizeBinaryHolder value) {
+        FixedSizeBinaryVector v = (FixedSizeBinaryVector) table.getVector(columnName);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+   /**
+     * Sets the value of the column at the given index and this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for method chaining
+     */
+    public MutableCursor setFixedSizeBinary(int columnIndex, int value) {
+        BitVector v = (BitVector) table.getVector(columnIndex);
+        v.setSafe(getRowNumber(), value);
+        return this;
+    }
+
+    /**
+     * Sets the value of the column with the given name at this MutableCursor to the given value. An
+     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
+     * IllegalArgumentException is thrown if it has a different type to that named in the method
+     * signature
+     *
+     * @return this MutableCursor for chaining operations
+     */
+    public MutableCursor setFixedSizeBinary(String columnName, int value) {
+        BitVector v = (BitVector) table.getVector(columnName);
         v.setSafe(getRowNumber(), value);
         return this;
     }
@@ -369,6 +1923,7 @@ public class MutableCursor extends Cursor {
                 long tsSecTZValue = ((TimeStampSecTZVector) v).get(fromRow);
                 ((TimeStampSecTZVector) v).setSafe(toRow, tsSecTZValue);
                 return;
+
             case DECIMAL:
                 ArrowBuf decimalValue = ((DecimalVector) v).get(fromRow);
                 ((DecimalVector) v).setSafe(toRow, decimalValue);
