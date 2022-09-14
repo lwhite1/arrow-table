@@ -57,7 +57,7 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * Moves this Cursor to the given 0-based row index
      * @return this Cursor for chaining
      **/
-    public Cursor at(int rowNumber) {
+    public Cursor setPosition(int rowNumber) {
         this.rowNumber = rowNumber;
         this.nextRowSet = false;
         return this;

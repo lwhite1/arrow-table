@@ -204,11 +204,11 @@ for (MutableCursor row: mutableable) {
 
 If you need an ImmutableCursor for your MutableTable, you can get one as described above.
 
-Finally, while cursors are usually iterated in the order of the underlying data vectors, but they are also positionable using the `Cursor#at()` method, so you can skip to a specific row. Row numbers are 0-based. 
+Finally, while cursors are usually iterated in the order of the underlying data vectors, but they are also positionable using the `Cursor#setPosition()` method, so you can skip to a specific row. Row numbers are 0-based. 
 
 ```java
 Cursor c = table.immutableCursor(); 
-int age101 = c.at(101) // change position directly to 101
+int age101 = c.setPosition(101) // change position directly to 101
 ```
 
 ### Read operations using cursors
@@ -320,11 +320,11 @@ for (MutableCursor row: mutableTable) {
 }
 ```
 
-Deletions are performed virtually. The row to be deleted is marked as such, but remains in the table until compaction occurs. The number of deleted records is available using `Table#deletedRowCount()`. This may be useful in deciding when to compact. Once a row is marked as deleted, it is skipped on subsequent iterations, but it can be accessed using `MutableTable#at(rowIndex)`. The following code checks whether a row is deleted, and deletes it if it isn't: 
+Deletions are performed virtually. The row to be deleted is marked as such, but remains in the table until compaction occurs. The number of deleted records is available using `Table#deletedRowCount()`. This may be useful in deciding when to compact. Once a row is marked as deleted, it is skipped on subsequent iterations, but it can be accessed using `MutableTable#setPosition(rowIndex)`. The following code checks whether a row is deleted, and deletes it if it isn't: 
 
 ```java
 MutableCursor mc = mutableTable.mutableCursor();
-mc.at(140); // positions the cursor at row 140
+mc.setPosition(140); // positions the cursor at row 140
 if (!mc.isDeletedRow()) {
   mc.deleteCurrentRow();
 }
@@ -349,6 +349,10 @@ int newDeleted = oldTable.deletedRowCount(); // the deleted row count is now 0
 Updates are performed using *set()* methods.
 
 There are two ways that updates are handled. They are done in place whenever possible. For example, updates to any fixed-width vector are always performed in-place. Otherwise, they are performed by deleting the original row, and appending a new copy of that row with the value changed.
+
+###### Vector types not supporting set operations
+
+The types NullVector, and ZeroVector do not support *set()* methods. 
 
 ###### Updating dictionary-encoded fields
 

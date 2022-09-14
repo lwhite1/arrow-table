@@ -39,7 +39,7 @@ class TableTest {
             assertEquals(2, t.getVectorCount());
             IntVector intVector1 = (IntVector) vectorList.get(0);
             assertEquals(INT_VECTOR_NAME_1, intVector1.getName());
-            c.at(0);
+            c.setPosition(0);
 
             // Now test changes to the first vector
             // first Table value is 1
@@ -62,7 +62,7 @@ class TableTest {
             assertEquals(2, t.getVectorCount());
             Cursor c = t.immutableCursor();
             IntVector intVector1 = (IntVector) vectorList.get(0);
-            c.at(0);
+            c.setPosition(0);
 
             // Now test changes to the first vector
             // first Table value is 1
@@ -213,7 +213,7 @@ class TableTest {
             assertEquals(2, t.rowCount);
             assertEquals(0, vsr.getRowCount()); // memory is copied for slice, not transferred
             IntVector intVector1 = (IntVector) vectorList.get(0);
-            c.at(0);
+            c.setPosition(0);
 
             // Now test changes to the first vector
             // first Table value is 1
