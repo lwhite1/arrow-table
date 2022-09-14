@@ -54,7 +54,7 @@ class CursorTest {
         try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
             assertEquals(c.getRowNumber(), -1);
-            c.at(1);
+            c.setPosition(1);
             assertEquals(c.getRowNumber(), 1);
         }
     }
@@ -64,7 +64,7 @@ class CursorTest {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
-            c.at(1);
+            c.setPosition(1);
             assertEquals(2, c.getInt(0));
         }
     }
@@ -74,7 +74,7 @@ class CursorTest {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
-            c.at(1);
+            c.setPosition(1);
             assertEquals(2, c.getInt(INT_VECTOR_NAME_1));
         }
     }
@@ -85,7 +85,7 @@ class CursorTest {
         try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
             assertTrue(c.hasNext());
-            c.at(1);
+            c.setPosition(1);
             assertFalse(c.hasNext());
         }
     }
@@ -95,7 +95,7 @@ class CursorTest {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
-            c.at(0);
+            c.setPosition(0);
             c.next();
             assertEquals(1, c.getRowNumber());
         }
@@ -106,7 +106,7 @@ class CursorTest {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
-            c.at(1);
+            c.setPosition(1);
             assertFalse(c.isNull(0));
         }
     }
@@ -116,7 +116,7 @@ class CursorTest {
         List<FieldVector> vectorList = twoIntColumns(allocator);
         try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
-            c.at(1);
+            c.setPosition(1);
             assertFalse(c.isNull(INT_VECTOR_NAME_1));
         }
     }
@@ -126,7 +126,7 @@ class CursorTest {
         List<FieldVector> vectorList = fixedWidthVectors(allocator, 2);
         try (Table t = new Table(vectorList)) {
             Cursor c = t.immutableCursor();
-            c.at(1);
+            c.setPosition(1);
             assertFalse(c.isNull("bigInt_vector"));
             assertEquals(c.getInt("int_vector"), c.getInt(0));
             assertEquals(c.getBigInt("bigInt_vector"), c.getBigInt(1));
