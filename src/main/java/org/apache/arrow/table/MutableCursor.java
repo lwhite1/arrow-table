@@ -1,5 +1,6 @@
 package org.apache.arrow.table;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.dictionary.Dictionary;
 import org.apache.arrow.vector.dictionary.DictionaryEncoder;
@@ -7,7 +8,6 @@ import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.holders.IntHolder;
 import org.apache.arrow.vector.holders.ValueHolder;
 import org.apache.arrow.vector.types.Types;
-import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
 import org.apache.arrow.vector.types.pojo.Field;
 
@@ -61,15 +61,16 @@ public class MutableCursor extends Cursor {
 
     /**
      * Moves this MutableCursor to the given 0-based row index
-     * Note: using at() allows you to position the index at a deleted row, while iterating skips the deleted rows.
+     * Note: using setPosition() allows you to position the index at a deleted row,
+     * while iterating skips the deleted rows.
      * TODO: consider whether this is preferable to
      *      (a) providing an iterator that includes deleted rows, or
      *      (b) providing something like atAny() that includes deleted rows, while the standard at would skip
      *
      * @return this Cursor for method chaining
      **/
-    public MutableCursor at(int rowNumber) {
-        super.at(rowNumber);
+    public MutableCursor setPosition(int rowNumber) {
+        super.setPosition(rowNumber);
         return this;
     }
 
@@ -82,7 +83,12 @@ public class MutableCursor extends Cursor {
     public MutableCursor setNull(String columnName) {
         FieldVector v = table.getVector(columnName);
         // TODO: Real implementation (without casts) after fixing setNull issue
-        // TODO: Handle the null vector as a special case
+        if (v instanceof NullVector) {
+            throw new IllegalArgumentException(
+                    String.format("Vector %s is of a type (%s) that does not support the method setNull()",
+                            columnName,
+                            v.getClass().getSimpleName()));
+        }
         if (v instanceof IntVector) {
             ((IntVector) v).setNull(getRowNumber());
         }
@@ -98,6 +104,12 @@ public class MutableCursor extends Cursor {
     public MutableCursor setNull(int columnIndex) {
         FieldVector v = table.getVector(columnIndex);
         // TODO: Real implementation (without casts) after fixing setNull issue
+        if (v instanceof NullVector) {
+            throw new IllegalArgumentException(
+                    String.format("Vector %s is of a type (%s) that does not support the method setNull()",
+                            v.getName(),
+                            v.getClass().getSimpleName()));
+        }
         if (v instanceof IntVector) {
             ((IntVector) v).setNull(getRowNumber());
         }
@@ -239,55 +251,142 @@ public class MutableCursor extends Cursor {
         }
     }
 
+    /**
+     * Copies the value in vector V at position fromRow to position toRow
+     * TODO: Handle nulls
+     * TODO: Check for missing cases
+     *
+     * @param v         The FieldVector that is both the source and destination for the copy operation
+     * @param fromRow   The row to copy from
+     * @param toRow     The row to copy to
+     */
     private void copyValue(FieldVector v, int fromRow, int toRow) {
         Types.MinorType type = v.getMinorType();
         switch (type) {
-/*
             case TINYINT:
-                return new NullableTinyIntHolder();
-            case UINT1:
-                return new NullableUInt1Holder();
-            case UINT2:
-                return new NullableUInt2Holder();
+                byte tinyIntValue = ((TinyIntVector) v).get(fromRow);
+                ((TinyIntVector) v).setSafe(toRow, tinyIntValue);
+                return;
             case SMALLINT:
-                return new NullableSmallIntHolder();
-*/
+                short smallIntValue = ((SmallIntVector) v).get(fromRow);
+                ((SmallIntVector) v).setSafe(toRow, smallIntValue);
+                return;
             case INT:
                 int intValue = ((IntVector) v).get(fromRow);
                 ((IntVector) v).setSafe(toRow, intValue);
                 return;
-/*
-            case UINT4:
-                return new NullableUInt4Holder();
-
-            case FLOAT4:
-                return new NullableFloat4Holder();
-            case INTERVALYEAR:
-                return new NullableIntervalYearHolder();
-            case TIMEMILLI:
-                return new NullableTimeMilliHolder();
             case BIGINT:
-                return new NullableBigIntHolder();
+                long bigIntValue = ((BigIntVector) v).get(fromRow);
+                ((BigIntVector) v).setSafe(toRow, bigIntValue);
+                return;
+            case UINT1:
+                byte UInt1Value = ((UInt1Vector) v).get(fromRow);
+                ((UInt1Vector) v).setSafe(toRow, UInt1Value);
+                return;
+            case UINT2:
+                char UInt2Value = ((UInt2Vector) v).get(fromRow);
+                ((UInt2Vector) v).setSafe(toRow, UInt2Value);
+                return;
+            case UINT4:
+                int UInt4Value = ((UInt4Vector) v).get(fromRow);
+                ((UInt4Vector) v).setSafe(toRow, UInt4Value);
+                return;
             case UINT8:
-                return new NullableUInt8Holder();
+                long UInt8Value = ((UInt8Vector) v).get(fromRow);
+                ((UInt8Vector) v).setSafe(toRow, UInt8Value);
+                return;
+            case FLOAT4:
+                float float4Value = ((Float4Vector) v).get(fromRow);
+                ((Float4Vector) v).setSafe(toRow, float4Value);
+                return;
             case FLOAT8:
-                return new NullableFloat8Holder();
-            case DATEMILLI:
-                return new NullableDateMilliHolder();
-            case TIMESTAMPMILLI:
-                return new NullableTimeStampMilliHolder();
+                double float8Value = ((Float8Vector) v).get(fromRow);
+                ((Float8Vector) v).setSafe(toRow, float8Value);
+                return;
+            case INTERVALYEAR:
+                int intervalYearValue = ((IntervalYearVector) v).get(fromRow);
+                ((IntervalYearVector) v).setSafe(toRow, intervalYearValue);
+                return;
             case INTERVALDAY:
-                return new NullableIntervalDayHolder();
+                ArrowBuf intervalDayValue = ((IntervalDayVector) v).get(fromRow);
+                ((IntervalDayVector) v).setSafe(toRow, intervalDayValue);
+                return;
+            case INTERVALMONTHDAYNANO:
+                ArrowBuf intervalMonthDayNanoValue = ((IntervalMonthDayNanoVector) v).get(fromRow);
+                ((IntervalMonthDayNanoVector) v).setSafe(toRow, intervalMonthDayNanoValue);
+                return;
+            case TIMENANO:
+                long timeNanoValue = ((TimeNanoVector) v).get(fromRow);
+                ((TimeNanoVector) v).setSafe(toRow, timeNanoValue);
+                return;
+            case TIMEMICRO:
+                long timeMicroValue = ((TimeMicroVector) v).get(fromRow);
+                ((TimeMicroVector) v).setSafe(toRow, timeMicroValue);
+                return;
+            case TIMEMILLI:
+                int timeMilliValue = ((TimeMilliVector) v).get(fromRow);
+                ((TimeMilliVector) v).setSafe(toRow, timeMilliValue);
+                return;
+            case TIMESEC:
+                int timeSecValue = ((TimeSecVector) v).get(fromRow);
+                ((TimeSecVector) v).setSafe(toRow, timeSecValue);
+                return;
+            case DATEMILLI:
+                long dateMilliValue = ((DateMilliVector) v).get(fromRow);
+                ((DateMilliVector) v).setSafe(toRow, dateMilliValue);
+                return;
+
+            case TIMESTAMPNANO:
+                long tsNanoValue = ((TimeStampNanoVector) v).get(fromRow);
+                ((TimeStampNanoVector) v).setSafe(toRow, tsNanoValue);
+                return;
+            case TIMESTAMPMICRO:
+                long tsMicroValue = ((TimeStampMicroVector) v).get(fromRow);
+                ((TimeStampMicroVector) v).setSafe(toRow, tsMicroValue);
+                return;
+            case TIMESTAMPMILLI:
+                long tsMilliValue = ((TimeStampMilliVector) v).get(fromRow);
+                ((TimeStampMilliVector) v).setSafe(toRow, tsMilliValue);
+                return;
+            case TIMESTAMPSEC:
+                long tsSecValue = ((TimeStampSecVector) v).get(fromRow);
+                ((TimeStampSecVector) v).setSafe(toRow, tsSecValue);
+                return;
+
+            case TIMESTAMPNANOTZ:
+                long tsNanoTZValue = ((TimeStampNanoTZVector) v).get(fromRow);
+                ((TimeStampNanoTZVector) v).setSafe(toRow, tsNanoTZValue);
+                return;
+            case TIMESTAMPMICROTZ:
+                long tsMicroTZValue = ((TimeStampMicroTZVector) v).get(fromRow);
+                ((TimeStampMicroTZVector) v).setSafe(toRow, tsMicroTZValue);
+                return;
+            case TIMESTAMPMILLITZ:
+                long tsMilliTZValue = ((TimeStampMilliTZVector) v).get(fromRow);
+                ((TimeStampMilliTZVector) v).setSafe(toRow, tsMilliTZValue);
+                return;
+            case TIMESTAMPSECTZ:
+                long tsSecTZValue = ((TimeStampSecTZVector) v).get(fromRow);
+                ((TimeStampSecTZVector) v).setSafe(toRow, tsSecTZValue);
+                return;
             case DECIMAL:
-                return new NullableDecimalHolder();
+                ArrowBuf decimalValue = ((DecimalVector) v).get(fromRow);
+                ((DecimalVector) v).setSafe(toRow, decimalValue);
+                return;
             case FIXEDSIZEBINARY:
-                return new NullableFixedSizeBinaryHolder();
+                byte[] fixedSizeBinaryValue = ((FixedSizeBinaryVector) v).get(fromRow);
+                ((FixedSizeBinaryVector) v).setSafe(toRow, fixedSizeBinaryValue);
+                return;
             case VARBINARY:
-                return new NullableVarBinaryHolder();
+                byte[] varBinaryValue = ((VarBinaryVector) v).get(fromRow);
+                ((VarBinaryVector) v).setSafe(toRow, varBinaryValue);
+                return;
             case BIT:
-                return new NullableBitHolder();
- */
+                int bitValue = ((BitVector) v).get(fromRow);
+                ((BitVector) v).setSafe(toRow, bitValue);
+                return;
             case VARCHAR:
+                // TODO: Handle Dictionary Encoded case
                 byte[] bytes = ((VarCharVector) v).get(fromRow);
                 ((VarCharVector) v).set(toRow, bytes);
                 return;
