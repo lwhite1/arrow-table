@@ -1,6 +1,8 @@
 package org.apache.arrow.table;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.vector.*;
+import org.apache.arrow.vector.holders.*;
 
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
@@ -28,7 +30,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * in Cursor wrap it with a filter to get only the non-deleted ones
      **/
     private final Iterator<Integer> iterator = intIterator();
-
 
     /**
      * Constructs a new BaseCursor backed by the given table.
@@ -96,6 +97,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public void getInt(String columnName, NullableIntHolder holder) {
+        IntVector vector = (IntVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row.
+     * An IllegalStateException is thrown if the column is not present and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public void getInt(int columnIndex, NullableIntHolder holder) {
+        IntVector vector = (IntVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
      * Returns an int from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
      * has a different type
@@ -113,6 +134,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public int getUInt4(int columnIndex) {
         UInt4Vector vector = (UInt4Vector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public void getUInt4(String columnName, NullableUInt4Holder holder) {
+        UInt4Vector vector = (UInt4Vector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row.
+     * An IllegalStateException is thrown if the column is not present and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public void getUInt4(int columnIndex, NullableUInt4Holder holder) {
+        UInt4Vector vector = (UInt4Vector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -136,6 +177,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getSmallInt(String columnName, NullableSmallIntHolder holder) {
+        SmallIntVector vector = (SmallIntVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row.
+     * An IllegalStateException is thrown if the column is not present, and an IllegalArgumentException is thrown
+     * if it is present but has a different type
+     */
+    public void getSmallInt(int columnIndex, NullableSmallIntHolder holder) {
+        SmallIntVector vector = (SmallIntVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
      * Returns a char from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
@@ -153,6 +214,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public char getUInt2(int columnIndex) {
         UInt2Vector vector = (UInt2Vector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getUInt2(String columnName, NullableUInt2Holder holder) {
+        UInt2Vector vector = (UInt2Vector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row.
+     * An IllegalStateException is thrown if the column is not present, and an IllegalArgumentException is thrown
+     * if it is present but has a different type
+     */
+    public void getUInt2(int columnIndex, NullableUInt2Holder holder) {
+        UInt2Vector vector = (UInt2Vector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -176,6 +257,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTinyInt(String columnName, NullableTinyIntHolder holder) {
+        TinyIntVector vector = (TinyIntVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row. An IllegalStateException
+     * is thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTinyInt(int columnIndex, NullableTinyIntHolder holder) {
+        TinyIntVector vector = (TinyIntVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
      * Returns a byte from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
@@ -193,6 +294,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public byte getUInt1(int columnIndex) {
         UInt1Vector vector = (UInt1Vector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getUInt1(String columnName, NullableUInt1Holder holder) {
+        UInt1Vector vector = (UInt1Vector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row. An IllegalStateException
+     * is thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getUInt1(int columnIndex, NullableUInt1Holder holder) {
+        UInt1Vector vector = (UInt1Vector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -216,6 +337,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getBigInt(String columnName, NullableBigIntHolder holder) {
+        BigIntVector vector = (BigIntVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row. An IllegalStateException
+     * is thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getBigInt(int columnIndex, NullableBigIntHolder holder) {
+        BigIntVector vector = (BigIntVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
      * Returns a long from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
@@ -236,6 +377,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getUInt8(String columnName, NullableUInt8Holder holder) {
+        UInt8Vector vector = (UInt8Vector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row. An IllegalStateException
+     * is thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getUInt8(int columnIndex, NullableUInt8Holder holder) {
+        UInt8Vector vector = (UInt8Vector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
      * Returns a float from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
@@ -253,6 +414,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public float getFloat4(int columnIndex) {
         Float4Vector vector = (Float4Vector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+   /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getFloat4(String columnName, NullableFloat4Holder holder) {
+        Float4Vector vector = (Float4Vector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row. An IllegalStateException
+     * is thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getFloat4(int columnIndex, NullableFloat4Holder holder) {
+        Float4Vector vector = (Float4Vector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -276,7 +457,27 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
-     * Returns an int from the column of the given name at the current row. An IllegalStateException is
+     * Returns a double from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getFloat8(String columnName, NullableFloat8Holder holder) {
+        Float8Vector vector = (Float8Vector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row. An IllegalStateException
+     * is thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getFloat8(int columnIndex, NullableFloat8Holder holder) {
+        Float8Vector vector = (Float8Vector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
      */
@@ -293,6 +494,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public int getBit(int columnIndex) {
         BitVector vector = (BitVector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Updates the holder with the value at the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getBit(String columnName, NullableBitHolder holder) {
+        BitVector vector = (BitVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Updates the holder with the value at the column with the given index at the current row. An IllegalStateException
+     * is thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getBit(int columnIndex, NullableBitHolder holder) {
+        BitVector vector = (BitVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -320,6 +541,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
      */
+    public void getTimeNano(String columnName, NullableTimeNanoHolder holder) {
+        TimeNanoVector vector = (TimeNanoVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeNano(int columnIndex, NullableTimeNanoHolder holder) {
+        TimeNanoVector vector = (TimeNanoVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
     public long getTimeMicro(String columnName) {
         TimeMicroVector vector = (TimeMicroVector) table.getVector(columnName);
         return vector.get(rowNumber);
@@ -333,6 +574,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public long getTimeMicro(int columnIndex) {
         TimeMicroVector vector = (TimeMicroVector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTimeMicro(String columnName, NullableTimeMicroHolder holder) {
+        TimeMicroVector vector = (TimeMicroVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeMicro(int columnIndex, NullableTimeMicroHolder holder) {
+        TimeMicroVector vector = (TimeMicroVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -353,6 +614,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public int getTimeMilli(int columnIndex) {
         TimeMilliVector vector = (TimeMilliVector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns an int from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTimeMilli(String columnName, NullableTimeMilliHolder holder) {
+        TimeMilliVector vector = (TimeMilliVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns an int from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeMilli(int columnIndex, NullableTimeMilliHolder holder) {
+        TimeMilliVector vector = (TimeMilliVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -396,6 +677,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Returns an int from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTimeSec(String columnName, NullableTimeSecHolder holder) {
+        TimeSecVector vector = (TimeSecVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns an int from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeSec(int columnIndex, NullableTimeSecHolder holder) {
+        TimeSecVector vector = (TimeSecVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
      * Returns a long from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
@@ -413,6 +714,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public long getTimeStampSec(int columnIndex) {
         TimeStampSecVector vector = (TimeStampSecVector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTimeStampSec(String columnName, NullableTimeStampSecHolder holder) {
+        TimeStampSecVector vector = (TimeStampSecVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeStampSec(int columnIndex, NullableTimeStampSecHolder holder) {
+        TimeStampSecVector vector = (TimeStampSecVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -460,6 +781,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
      */
+    public void getTimeStampSecTZ(String columnName, NullableTimeStampSecTZHolder holder) {
+        TimeStampSecTZVector vector = (TimeStampSecTZVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeStampSecTZ(int columnIndex, NullableTimeStampSecTZHolder holder) {
+        TimeStampSecTZVector vector = (TimeStampSecTZVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
     public long getTimeStampNano(String columnName) {
         TimeStampNanoVector vector = (TimeStampNanoVector) table.getVector(columnName);
         return vector.get(rowNumber);
@@ -473,6 +814,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public long getTimeStampNano(int columnIndex) {
         TimeStampNanoVector vector = (TimeStampNanoVector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTimeStampNano(String columnName, NullableTimeStampNanoHolder holder) {
+        TimeStampNanoVector vector = (TimeStampNanoVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeStampNano(int columnIndex, NullableTimeStampNanoHolder holder) {
+        TimeStampNanoVector vector = (TimeStampNanoVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -515,6 +876,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
         return vector.get(rowNumber);
     }
 
+   /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTimeStampNanoTZ(String columnName, NullableTimeStampNanoTZHolder holder) {
+        TimeStampNanoTZVector vector = (TimeStampNanoTZVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeStampNanoTZ(int columnIndex, NullableTimeStampNanoTZHolder holder) {
+        TimeStampNanoTZVector vector = (TimeStampNanoTZVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
     /**
      * Returns a long from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
@@ -533,6 +914,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public long getTimeStampMilli(int columnIndex) {
         TimeStampMilliVector vector = (TimeStampMilliVector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTimeStampMilli(String columnName, NullableTimeStampMilliHolder holder) {
+        TimeStampMilliVector vector = (TimeStampMilliVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeStampMilli(int columnIndex, NullableTimeStampMilliHolder holder) {
+        TimeStampMilliVector vector = (TimeStampMilliVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -578,6 +979,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     /**
      * Returns a long from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different types
+     */
+    public void getTimeStampMilliTZ(String columnName, NullableTimeStampMilliTZHolder holder) {
+        TimeStampMilliTZVector vector = (TimeStampMilliTZVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeStampMilliTZ(int columnIndex, NullableTimeStampMilliTZHolder holder) {
+        TimeStampMilliTZVector vector = (TimeStampMilliTZVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
      */
     public long getTimeStampMicro(String columnName) {
@@ -593,6 +1014,26 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     public long getTimeStampMicro(int columnIndex) {
         TimeStampMicroVector vector = (TimeStampMicroVector) table.getVector(columnIndex);
         return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTimeStampMicro(String columnName, NullableTimeStampMicroHolder holder) {
+        TimeStampMicroVector vector = (TimeStampMicroVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeStampMicro(int columnIndex, NullableTimeStampMicroHolder holder) {
+        TimeStampMicroVector vector = (TimeStampMicroVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
@@ -636,11 +1077,29 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Returns a long from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getTimeStampMicroTZ(String columnName, NullableTimeStampMicroTZHolder holder) {
+        TimeStampMicroTZVector vector = (TimeStampMicroTZVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a long from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getTimeStampMicroTZ(int columnIndex, NullableTimeStampMicroTZHolder holder) {
+        TimeStampMicroTZVector vector = (TimeStampMicroTZVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
      * Returns a Duration from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf or long?)
      */
     public Duration getDurationObj(String columnName) {
         DurationVector vector = (DurationVector) table.getVector(columnName);
@@ -651,8 +1110,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * Returns a Duration from the column with the given index at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
      * has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf or long?)
      */
     public Duration getDurationObj(int columnIndex) {
         DurationVector vector = (DurationVector) table.getVector(columnIndex);
@@ -660,11 +1117,49 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Returns a Duration from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public ArrowBuf getDuration(String columnName) {
+        DurationVector vector = (DurationVector) table.getVector(columnName);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a Duration from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public ArrowBuf getDuration(int columnIndex) {
+        DurationVector vector = (DurationVector) table.getVector(columnIndex);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a Duration from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getDuration(String columnName, NullableDurationHolder holder) {
+        DurationVector vector = (DurationVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a Duration from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getDuration(int columnIndex, NullableDurationHolder holder) {
+        DurationVector vector = (DurationVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
      * Returns a PeriodDuration from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf or long?)
      */
     public PeriodDuration getIntervalMonthDayNanoObj(String columnName) {
         IntervalMonthDayNanoVector vector = (IntervalMonthDayNanoVector) table.getVector(columnName);
@@ -675,8 +1170,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * Returns a PeriodDuration from the column with the given index at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
      * has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf or long?)
      */
     public PeriodDuration getIntervalMonthDayNanoObj(int columnIndex) {
         IntervalMonthDayNanoVector vector = (IntervalMonthDayNanoVector) table.getVector(columnIndex);
@@ -684,23 +1177,89 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Returns a PeriodDuration from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public ArrowBuf getIntervalMonthDayNano(String columnName) {
+        IntervalMonthDayNanoVector vector = (IntervalMonthDayNanoVector) table.getVector(columnName);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a PeriodDuration from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public ArrowBuf getIntervalMonthDayNano(int columnIndex) {
+        IntervalMonthDayNanoVector vector = (IntervalMonthDayNanoVector) table.getVector(columnIndex);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a PeriodDuration from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getIntervalMonthDayNano(String columnName, NullableIntervalMonthDayNanoHolder holder) {
+        IntervalMonthDayNanoVector vector = (IntervalMonthDayNanoVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns a PeriodDuration from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getIntervalMonthDayNano(int columnIndex, NullableIntervalMonthDayNanoHolder holder) {
+        IntervalMonthDayNanoVector vector = (IntervalMonthDayNanoVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
      * Returns a Duration from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf or long?)
      */
-    public Duration getIntervalDayObj(String columnName) {
+    public ArrowBuf getIntervalDay(String columnName) {
         IntervalDayVector vector = (IntervalDayVector) table.getVector(columnName);
-        return vector.getObject(rowNumber);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns an ArrowBuf from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public ArrowBuf getIntervalDay(int columnIndex) {
+        IntervalDayVector vector = (IntervalDayVector) table.getVector(columnIndex);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a Duration from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public void getIntervalDay(String columnName, NullableIntervalDayHolder holder) {
+        IntervalDayVector vector = (IntervalDayVector) table.getVector(columnName);
+        vector.get(rowNumber, holder);
+    }
+
+    /**
+     * Returns an ArrowBuf from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public void getIntervalDay(int columnIndex, NullableIntervalDayHolder holder) {
+        IntervalDayVector vector = (IntervalDayVector) table.getVector(columnIndex);
+        vector.get(rowNumber, holder);
     }
 
     /**
      * Returns a Duration from the column with the given index at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
      * has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf or long?)
      */
     public Duration getIntervalDayObj(int columnIndex) {
         IntervalDayVector vector = (IntervalDayVector) table.getVector(columnIndex);
@@ -708,11 +1267,19 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Returns a Duration from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public Duration getIntervalDayObj(String columnName) {
+        IntervalDayVector vector = (IntervalDayVector) table.getVector(columnName);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
      * Returns a Period from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf or long?)
      */
     public Period getIntervalYearObj(String columnName) {
         IntervalYearVector vector = (IntervalYearVector) table.getVector(columnName);
@@ -723,20 +1290,36 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * Returns a Period from the column with the given index at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
      * has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf or long?)
      */
     public Period getIntervalYearObj(int columnIndex) {
         IntervalYearVector vector = (IntervalYearVector) table.getVector(columnIndex);
         return vector.getObject(rowNumber);
     }
 
+   /**
+     * Returns a Period from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public int getIntervalYear(String columnName) {
+        IntervalYearVector vector = (IntervalYearVector) table.getVector(columnName);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a Period from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public int getIntervalYear(int columnIndex) {
+        IntervalYearVector vector = (IntervalYearVector) table.getVector(columnIndex);
+        return vector.get(rowNumber);
+    }
+
     /**
      * Returns a BigDecimal from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it
      * is present but has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf?)
      */
     public BigDecimal getDecimalObj(String columnName) {
         DecimalVector vector = (DecimalVector) table.getVector(columnName);
@@ -747,12 +1330,30 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * Returns a BigDecimal from the column with the given index at the current row. An IllegalStateException is
      * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
      * has a different type
-     *
-     * TODO: version to return primitive type (ArrowBuf?)
      */
     public BigDecimal getDecimalObj(int columnIndex) {
         DecimalVector vector = (DecimalVector) table.getVector(columnIndex);
         return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns a BigDecimal from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it
+     * is present but has a different type
+     */
+    public ArrowBuf getDecimal(String columnName) {
+        DecimalVector vector = (DecimalVector) table.getVector(columnName);
+        return vector.get(rowNumber);
+    }
+
+    /**
+     * Returns a BigDecimal from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present, and an IllegalArgumentException is thrown if it is present but
+     * has a different type
+     */
+    public ArrowBuf getDecimal(int columnIndex) {
+        DecimalVector vector = (DecimalVector) table.getVector(columnIndex);
+        return vector.get(rowNumber);
     }
 
     /**
@@ -918,12 +1519,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     //   Struct
     //   Map
     //   Union && DenseUnion
-    //   plus primitives for the following
-    //      Duration
-    //      Decimal
-    //      IntervalDay
-    //      IntervalMonthDayNano
-    //      IntervalYear
     //   plus (for dealing with nulls?)
     //       all the object getters for things like TimeStampTz for Boxed return results (e.g. long v. Long)
     //   plus ones using holders
