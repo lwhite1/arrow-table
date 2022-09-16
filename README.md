@@ -222,6 +222,15 @@ int age1 = c.get("age"); // gets the value of vector named 'age' in the table at
 int age2 = c.get(12);    // gets the value of the 13th vecto in the table at row 0
 ```
 
+You can also get value using a NullableHolder. For example: 
+
+```Java
+NullableIntHolder holder = new NullableIntHolder(); 
+int b = cursor.getInt("age", holder);
+```
+
+This can be used to retrieve values without creating a new Object for each. 
+
 In addition to getting values, you can check if a value is null using `isNull()` and you can get the current row number: 
 
 ```java
@@ -231,7 +240,7 @@ int row = cursor.getRowNumber(); // 0
 
 Note that while there are getters for most vector types (e.g. *getInt()* for use with IntVector) and a generic *isNull()* method, there is no *getNull()* method for use with the NullVector type or *getZero()* for use with ZeroVector (a zero-length vector of any type).
 
-#### Reading Objects
+#### Reading values as Objects
 
 For any given vector type, the basic *get()* method returns a primitive value. For example, *getTimeStampMicro()* returns a long value that encodes the timestamp. To get the LocalDateTime object representing that timestamp in Java, another method with 'Obj' appended to the name is provided.  For example: 
 
