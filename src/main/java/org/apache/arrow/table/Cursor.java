@@ -2,6 +2,9 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.vector.*;
+import org.apache.arrow.vector.complex.ListVector;
+import org.apache.arrow.vector.complex.MapVector;
+import org.apache.arrow.vector.complex.StructVector;
 import org.apache.arrow.vector.holders.*;
 
 import java.math.BigDecimal;
@@ -10,6 +13,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -75,6 +79,47 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
         ValueVector vector = table.getVector(columnIndex);
         return vector.isNull(rowNumber);
     }
+
+    /**
+     * Returns a Map from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public List<?> getMap(String columnName) {
+        MapVector vector = (MapVector) table.getVector(columnName);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns a Struct from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public Object getStruct(String columnName) {
+        StructVector vector = (StructVector) table.getVector(columnName);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns a List from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public List<?> getList(String columnName) {
+        ListVector vector = (ListVector) table.getVector(columnName);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns a List from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public List<?> getList(int columnIndex) {
+        ListVector vector = (ListVector) table.getVector(columnIndex);
+        return vector.getObject(rowNumber);
+    }
+
 
     /**
      * Returns an int from the column of the given name at the current row. An IllegalStateException is

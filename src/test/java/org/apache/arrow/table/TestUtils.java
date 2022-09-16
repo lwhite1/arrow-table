@@ -2,10 +2,21 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.*;
+import org.apache.arrow.vector.complex.ListVector;
+import org.apache.arrow.vector.complex.MapVector;
+import org.apache.arrow.vector.complex.StructVector;
+import org.apache.arrow.vector.complex.impl.NullableStructWriter;
+import org.apache.arrow.vector.complex.impl.UnionMapWriter;
+import org.apache.arrow.vector.complex.writer.Float8Writer;
+import org.apache.arrow.vector.complex.writer.IntWriter;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.pojo.FieldType;
 import org.junit.platform.commons.util.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.arrow.vector.complex.BaseRepeatedValueVector.OFFSET_WIDTH;
 
 public class TestUtils {
 
@@ -14,6 +25,9 @@ public class TestUtils {
     public static final String INT_VECTOR_NAME_1 = "intCol1";
     public static final String VARCHAR_VECTOR_NAME_1 = "varcharCol1";
     public static final String INT_VECTOR_NAME_2 = "intCol2";
+    public static final String INT_LIST_VECTOR_NAME = "int list vector";
+    public static final String INT_DOUBLE_MAP_VECTOR_NAME = "int-double map vector";
+    public static final String STRUCT_VECTOR_NAME = "struct_vector";
 
     /**
      * Returns a list of two IntVectors to be used to instantiate Tables for testing.
@@ -100,8 +114,100 @@ public class TestUtils {
         vectors.forEach(vec -> GenerateSampleData.generateTestData(vec, rowCount));
         return vectors;
     }
+
     static List<FieldVector> simpleTemporalVectors(BufferAllocator allocator, int rowCount) {
         List<FieldVector> vectors = new ArrayList<>();
         return simpleTemporalVectors(vectors, allocator, rowCount);
+    }
+
+    /**
+     * Returns a list vector of ints
+     */
+    static ListVector simpleListVector(BufferAllocator allocator) {
+        ListVector listVector = ListVector.empty(INT_LIST_VECTOR_NAME, allocator);
+        final int innerCount = 80; // total number of values
+        final int outerCount = 8;  // total number of values in the list vector itself
+        final int listLength = innerCount / outerCount; // length of an individual list
+
+        Types.MinorType type = Types.MinorType.INT;
+        listVector.addOrGetVector(FieldType.nullable(type.getType()));
+
+        listVector.allocateNew();
+        IntVector dataVector = (IntVector) listVector.getDataVector();
+
+        for (int i = 0; i < innerCount; i++) {
+            dataVector.set(i, i);
+        }
+        dataVector.setValueCount(innerCount);
+
+        for (int i = 0; i < outerCount; i++) {
+            BitVectorHelper.setBit(listVector.getValidityBuffer(), i);
+            listVector.getOffsetBuffer().setInt(i * OFFSET_WIDTH, i * listLength);
+            listVector.getOffsetBuffer().setInt((i + 1) * OFFSET_WIDTH, (i + 1) * listLength);
+        }
+        listVector.setLastSet(outerCount - 1);
+        listVector.setValueCount(outerCount);
+
+        return listVector;
+    }
+
+
+    static StructVector simpleStructVector(BufferAllocator allocator) {
+        final String INT_COL = "struct_int_child";
+        final String FLT_COL = "struct_flt_child";
+        StructVector structVector = StructVector.empty(STRUCT_VECTOR_NAME, allocator);
+        final int size = 6; // number of structs
+
+        NullableStructWriter structWriter = structVector.getWriter();
+        structVector.addOrGet(INT_COL, FieldType.nullable(Types.MinorType.INT.getType()), IntVector.class);
+        structVector.addOrGet(FLT_COL, FieldType.nullable(Types.MinorType.INT.getType()), IntVector.class);
+        structVector.allocateNew();
+        IntWriter intWriter = structWriter.integer(INT_COL);
+        Float8Writer float8Writer = structWriter.float8(FLT_COL);
+
+        for (int i = 0; i < size; i++) {
+            structWriter.setPosition(i);
+            structWriter.start();
+            intWriter.writeInt(i);
+            float8Writer.writeFloat8(i * .1);
+            structWriter.end();
+        }
+
+        structWriter.setValueCount(size);
+
+        return structVector;
+    }
+
+    /**
+     * Returns a MapVector of ints to doubles
+     */
+    static MapVector simpleMapVector(BufferAllocator allocator) {
+        MapVector mapVector = MapVector.empty(INT_DOUBLE_MAP_VECTOR_NAME, allocator, false);
+        final int mapSize = 6; // length of an individual list
+
+        UnionMapWriter mapWriter = mapVector.getWriter();
+        for (int i = 0; i < mapSize; i++) {
+            // i == 1 is a NULL
+            if (i != 1) {
+                mapWriter.setPosition(i);
+                mapWriter.startMap();
+                // i == 3 is an empty map
+                if (i != 3) {
+                    for (int j = 0; j < i + 1; j++) {
+                        mapWriter.startEntry();
+                        mapWriter.key().bigInt().writeBigInt(j);
+                        // i == 5 maps to a NULL value
+                        if (i != 5) {
+                            mapWriter.value().integer().writeInt(j);
+                        }
+                        mapWriter.endEntry();
+                    }
+                }
+                mapWriter.endMap();
+            }
+        }
+        mapWriter.setValueCount(mapSize);
+
+        return mapVector;
     }
 }

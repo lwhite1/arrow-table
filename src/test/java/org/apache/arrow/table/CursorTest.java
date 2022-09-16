@@ -2,11 +2,19 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.vector.BitVectorHelper;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.complex.ListVector;
+import org.apache.arrow.vector.complex.MapVector;
+import org.apache.arrow.vector.complex.StructVector;
+import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.apache.arrow.vector.util.JsonStringHashMap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.arrow.table.TestUtils.*;
+import static org.apache.arrow.vector.complex.BaseRepeatedValueVector.OFFSET_WIDTH;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CursorTest {
@@ -153,4 +162,74 @@ class CursorTest {
             assertEquals(c.getTimeStampNano("timeStampNano_vector"), c.getTimeStampNano(17));
         }
     }
+
+    @Test
+    void testSimpleListVector1() {
+        try (ListVector listVector = simpleListVector(allocator);
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(listVector);
+            Table table = new Table(vectorSchemaRoot);
+        ) {
+            for (Cursor c : table) {
+                @SuppressWarnings("unchecked")
+                List<Integer> list = (List<Integer>) c.getList(INT_LIST_VECTOR_NAME);
+                assertEquals(10, list.size());
+            }
+        }
+    }
+
+    @Test
+    void testSimpleListVector2() {
+        try (ListVector listVector = simpleListVector(allocator);
+            VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(listVector);
+            Table table = new Table(vectorSchemaRoot);
+        ) {
+            for (Cursor c : table) {
+                @SuppressWarnings("unchecked")
+                List<Integer> list = (List<Integer>) c.getList(0);
+                assertEquals(10, list.size());
+            }
+        }
+    }
+
+    @Test
+    void testSimpleStructVector1() {
+        try (StructVector structVector = simpleStructVector(allocator);
+             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(structVector);
+             Table table = new Table(vectorSchemaRoot);
+        ) {
+            System.out.println(table.contentToTSVString());
+            for (Cursor c : table) {
+                @SuppressWarnings("unchecked")
+                JsonStringHashMap<String, ?> struct = (JsonStringHashMap<String, ?>) c.getStruct(STRUCT_VECTOR_NAME);
+                int a = (int) struct.get("struct_int_child");
+                double b = (double) struct.get("struct_flt_child");
+                assertNotNull(struct);
+                assertTrue(a >= 0);
+                assertTrue(b <= a, String.format("a = %s and b = %s", a, b));
+            }
+        }
+    }
+
+    @Test
+    void testSimpleMapVector1() {
+        try (MapVector mapVector = simpleMapVector(allocator);
+             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(mapVector);
+             Table table = new Table(vectorSchemaRoot);
+        ) {
+            System.out.println(table.contentToTSVString());
+            System.out.println(table.getSchema());
+
+            int i = 1;
+            for (Cursor c : table) {
+                @SuppressWarnings("unchecked")
+                List<Integer> list = (List<Integer>) c.getMap(INT_DOUBLE_MAP_VECTOR_NAME);
+                if (list != null && !list.isEmpty()) {
+                    assertEquals(i, list.size());
+                }
+                System.out.println(c);
+                i++;
+            }
+        }
+    }
+
 }
