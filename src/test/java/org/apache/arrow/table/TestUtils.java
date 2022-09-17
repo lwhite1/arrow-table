@@ -182,32 +182,21 @@ public class TestUtils {
      * Returns a MapVector of ints to doubles
      */
     static MapVector simpleMapVector(BufferAllocator allocator) {
-        MapVector mapVector = MapVector.empty(INT_DOUBLE_MAP_VECTOR_NAME, allocator, false);
-        final int mapSize = 6; // length of an individual list
-
+        MapVector mapVector = MapVector.empty("map", allocator, false);
+        mapVector.allocateNew();
+        int count = 5;
         UnionMapWriter mapWriter = mapVector.getWriter();
-        for (int i = 0; i < mapSize; i++) {
-            // i == 1 is a NULL
-            if (i != 1) {
-                mapWriter.setPosition(i);
-                mapWriter.startMap();
-                // i == 3 is an empty map
-                if (i != 3) {
-                    for (int j = 0; j < i + 1; j++) {
-                        mapWriter.startEntry();
-                        mapWriter.key().bigInt().writeBigInt(j);
-                        // i == 5 maps to a NULL value
-                        if (i != 5) {
-                            mapWriter.value().integer().writeInt(j);
-                        }
-                        mapWriter.endEntry();
-                    }
-                }
-                mapWriter.endMap();
+        for (int i = 0; i < count; i++) {
+            mapWriter.startMap();
+            for (int j = 0; j < i + 1; j++) {
+                mapWriter.startEntry();
+                mapWriter.key().bigInt().writeBigInt(j);
+                mapWriter.value().integer().writeInt(j);
+                mapWriter.endEntry();
             }
+            mapWriter.endMap();
         }
-        mapWriter.setValueCount(mapSize);
-
+        mapWriter.setValueCount(count);
         return mapVector;
     }
 }
