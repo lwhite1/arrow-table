@@ -6,6 +6,7 @@ import org.apache.arrow.vector.complex.ListVector;
 import org.apache.arrow.vector.complex.MapVector;
 import org.apache.arrow.vector.complex.StructVector;
 import org.apache.arrow.vector.holders.*;
+import org.apache.arrow.vector.types.pojo.ArrowType;
 
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
@@ -86,7 +87,7 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      * has a different type
      */
     public List<?> getMap(String columnName) {
-        MapVector vector = (MapVector) table.getVector(columnName);
+        ListVector vector = (ListVector) table.getVector(columnName);
         return vector.getObject(rowNumber);
     }
 

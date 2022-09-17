@@ -26,7 +26,7 @@ public class TestUtils {
     public static final String VARCHAR_VECTOR_NAME_1 = "varcharCol1";
     public static final String INT_VECTOR_NAME_2 = "intCol2";
     public static final String INT_LIST_VECTOR_NAME = "int list vector";
-    public static final String INT_DOUBLE_MAP_VECTOR_NAME = "int-double map vector";
+    public static final String BIGINT_INT_MAP_VECTOR_NAME = "bigint-int map vector";
     public static final String STRUCT_VECTOR_NAME = "struct_vector";
 
     /**
@@ -182,7 +182,7 @@ public class TestUtils {
      * Returns a MapVector of ints to doubles
      */
     static MapVector simpleMapVector(BufferAllocator allocator) {
-        MapVector mapVector = MapVector.empty("map", allocator, false);
+        MapVector mapVector = MapVector.empty(BIGINT_INT_MAP_VECTOR_NAME, allocator, false);
         mapVector.allocateNew();
         int count = 5;
         UnionMapWriter mapWriter = mapVector.getWriter();
