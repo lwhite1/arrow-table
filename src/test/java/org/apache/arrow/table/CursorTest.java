@@ -2,14 +2,10 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.BitVectorHelper;
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.complex.ListVector;
 import org.apache.arrow.vector.complex.MapVector;
 import org.apache.arrow.vector.complex.StructVector;
-import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
@@ -22,9 +18,9 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.arrow.table.TestUtils.*;
-import static org.apache.arrow.vector.complex.BaseRepeatedValueVector.OFFSET_WIDTH;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CursorTest {
@@ -213,23 +209,23 @@ class CursorTest {
     @Test
     void testSimpleMapVector1() {
         try (MapVector mapVector = simpleMapVector(allocator);
-             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(mapVector);
-             Table table = new Table(vectorSchemaRoot);
-        ) {
-            System.out.println(table.contentToTSVString());
-            System.out.println(table.getSchema());
+             Table table = new Table(List.of(mapVector))) {
 
             int i = 1;
             for (Cursor c : table) {
                 @SuppressWarnings("unchecked")
-                List<Integer> list = (List<Integer>) c.getMap(INT_DOUBLE_MAP_VECTOR_NAME);
+                List<JsonStringHashMap<String, ?>> list = (List<JsonStringHashMap<String, ?>>) c.getMap(BIGINT_INT_MAP_VECTOR_NAME);
                 if (list != null && !list.isEmpty()) {
                     assertEquals(i, list.size());
+                    for (JsonStringHashMap<String, ?> sv : list) {
+                        assertEquals(2, sv.size());
+                        Long o1 = (Long) sv.get("key");
+                        Integer o2 = (Integer) sv.get("value");
+                        assertEquals(o1, o2.longValue());
+                    }
                 }
-                System.out.println(c);
                 i++;
             }
         }
     }
-
 }
