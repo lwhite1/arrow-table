@@ -2,10 +2,7 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.vector.*;
-import org.apache.arrow.vector.complex.ListVector;
-import org.apache.arrow.vector.complex.MapVector;
-import org.apache.arrow.vector.complex.StructVector;
-import org.apache.arrow.vector.complex.UnionVector;
+import org.apache.arrow.vector.complex.*;
 import org.apache.arrow.vector.holders.*;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 
@@ -117,6 +114,16 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Returns an object from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public Object getDenseUnion(String columnName) {
+        DenseUnionVector vector = (DenseUnionVector) table.getVector(columnName);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
      * Returns a List from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
      * has a different type
@@ -135,7 +142,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
         ListVector vector = (ListVector) table.getVector(columnIndex);
         return vector.getObject(rowNumber);
     }
-
 
     /**
      * Returns an int from the column of the given name at the current row. An IllegalStateException is

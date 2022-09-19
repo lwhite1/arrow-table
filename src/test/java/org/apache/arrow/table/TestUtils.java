@@ -2,19 +2,15 @@ package org.apache.arrow.table;
 
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.*;
-import org.apache.arrow.vector.complex.ListVector;
-import org.apache.arrow.vector.complex.MapVector;
-import org.apache.arrow.vector.complex.StructVector;
-import org.apache.arrow.vector.complex.UnionVector;
+import org.apache.arrow.vector.complex.*;
 import org.apache.arrow.vector.complex.impl.NullableStructWriter;
 import org.apache.arrow.vector.complex.impl.UnionMapWriter;
-import org.apache.arrow.vector.complex.writer.FieldWriter;
 import org.apache.arrow.vector.complex.writer.Float8Writer;
 import org.apache.arrow.vector.complex.writer.IntWriter;
 import org.apache.arrow.vector.holders.NullableUInt4Holder;
 import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
-import org.apache.arrow.vector.util.CallBack;
 import org.junit.platform.commons.util.Preconditions;
 
 import java.util.ArrayList;
@@ -25,7 +21,6 @@ import static org.apache.arrow.vector.complex.BaseRepeatedValueVector.OFFSET_WID
 public class TestUtils {
 
     public static final String INT_VECTOR_NAME = "intCol";
-    public static final String VARCHAR_VECTOR_NAME = "varcharCol";
     public static final String INT_VECTOR_NAME_1 = "intCol1";
     public static final String VARCHAR_VECTOR_NAME_1 = "varcharCol1";
     public static final String INT_VECTOR_NAME_2 = "intCol2";
@@ -220,6 +215,27 @@ public class TestUtils {
         unionVector.setType(0, Types.MinorType.UINT4);
         unionVector.setSafe(0, uInt4Holder);
         unionVector.setType(2, Types.MinorType.UINT4);
+        unionVector.setSafe(2, uInt4Holder);
+        unionVector.setValueCount(4);
+        return unionVector;
+    }
+
+    /**
+     * Returns a DenseUnionVector
+     */
+    static DenseUnionVector simpleDenseUnionVector(BufferAllocator allocator) {
+        final NullableUInt4Holder uInt4Holder = new NullableUInt4Holder();
+        uInt4Holder.value = 100;
+        uInt4Holder.isSet = 1;
+
+        DenseUnionVector unionVector = new DenseUnionVector(UNION_VECTOR_NAME, allocator, null, null);
+        unionVector.allocateNew();
+
+        // write some data
+        byte uint4TypeId = unionVector.registerNewTypeId(Field.nullable("", Types.MinorType.UINT4.getType()));
+        unionVector.setTypeId(0, uint4TypeId);
+        unionVector.setSafe(0, uInt4Holder);
+        unionVector.setTypeId(2, uint4TypeId);
         unionVector.setSafe(2, uInt4Holder);
         unionVector.setValueCount(4);
         return unionVector;

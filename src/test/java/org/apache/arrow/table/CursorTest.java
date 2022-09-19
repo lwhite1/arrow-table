@@ -3,41 +3,25 @@ package org.apache.arrow.table;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.*;
-import org.apache.arrow.vector.complex.ListVector;
-import org.apache.arrow.vector.complex.MapVector;
-import org.apache.arrow.vector.complex.StructVector;
-import org.apache.arrow.vector.complex.UnionVector;
-import org.apache.arrow.vector.types.pojo.ArrowType;
-import org.apache.arrow.vector.types.pojo.Field;
-import org.apache.arrow.vector.types.pojo.FieldType;
-import org.apache.arrow.vector.types.pojo.Schema;
+import org.apache.arrow.vector.complex.*;
 import org.apache.arrow.vector.util.JsonStringHashMap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.apache.arrow.table.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CursorTest {
 
-    public static final String INT_VECTOR_NAME = "intCol";
     private BufferAllocator allocator;
-    private Schema schema1;
 
     @BeforeEach
     public void init() {
         allocator = new RootAllocator(Long.MAX_VALUE);
-        List<Field> fieldList = new ArrayList<>();
-        ArrowType arrowType =  new ArrowType.Int(32,true);
-        FieldType fieldType = new FieldType(true, arrowType, null);
-        fieldList.add(new Field(INT_VECTOR_NAME, fieldType, null));
-        schema1 = new Schema(fieldList);
     }
 
     @AfterEach
@@ -164,7 +148,7 @@ class CursorTest {
     void testSimpleListVector1() {
         try (ListVector listVector = simpleListVector(allocator);
             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(listVector);
-            Table table = new Table(vectorSchemaRoot);
+            Table table = new Table(vectorSchemaRoot)
         ) {
             for (Cursor c : table) {
                 @SuppressWarnings("unchecked")
@@ -178,7 +162,7 @@ class CursorTest {
     void testSimpleListVector2() {
         try (ListVector listVector = simpleListVector(allocator);
             VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(listVector);
-            Table table = new Table(vectorSchemaRoot);
+            Table table = new Table(vectorSchemaRoot)
         ) {
             for (Cursor c : table) {
                 @SuppressWarnings("unchecked")
@@ -192,7 +176,7 @@ class CursorTest {
     void testSimpleStructVector1() {
         try (StructVector structVector = simpleStructVector(allocator);
              VectorSchemaRoot vectorSchemaRoot = VectorSchemaRoot.of(structVector);
-             Table table = new Table(vectorSchemaRoot);
+             Table table = new Table(vectorSchemaRoot)
         ) {
             System.out.println(table.contentToTSVString());
             for (Cursor c : table) {
@@ -211,7 +195,7 @@ class CursorTest {
     void testSimpleUnionVector() {
         try (UnionVector unionVector = simpleUnionVector(allocator);
              VectorSchemaRoot vsr = VectorSchemaRoot.of(unionVector);
-             Table table = new Table(vsr);
+             Table table = new Table(vsr)
         ) {
             Cursor c = table.immutableCursor();
             c.setPosition(0);
@@ -220,6 +204,24 @@ class CursorTest {
             assertNull(c.getUnion(UNION_VECTOR_NAME));
             c.setPosition(2);
             Object object2  = c.getUnion(UNION_VECTOR_NAME);
+            assertEquals(100, object0);
+            assertEquals(100, object2);
+        }
+    }
+
+    @Test
+    void testSimpleDenseUnionVector() {
+        try (DenseUnionVector unionVector = simpleDenseUnionVector(allocator);
+             VectorSchemaRoot vsr = VectorSchemaRoot.of(unionVector);
+             Table table = new Table(vsr)
+        ) {
+            Cursor c = table.immutableCursor();
+            c.setPosition(0);
+            Object object0  = c.getDenseUnion(UNION_VECTOR_NAME);
+            c.setPosition(1);
+            assertNull(c.getDenseUnion(UNION_VECTOR_NAME));
+            c.setPosition(2);
+            Object object2  = c.getDenseUnion(UNION_VECTOR_NAME);
             assertEquals(100, object0);
             assertEquals(100, object2);
         }
