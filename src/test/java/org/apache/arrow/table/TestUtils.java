@@ -5,12 +5,16 @@ import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.complex.ListVector;
 import org.apache.arrow.vector.complex.MapVector;
 import org.apache.arrow.vector.complex.StructVector;
+import org.apache.arrow.vector.complex.UnionVector;
 import org.apache.arrow.vector.complex.impl.NullableStructWriter;
 import org.apache.arrow.vector.complex.impl.UnionMapWriter;
+import org.apache.arrow.vector.complex.writer.FieldWriter;
 import org.apache.arrow.vector.complex.writer.Float8Writer;
 import org.apache.arrow.vector.complex.writer.IntWriter;
+import org.apache.arrow.vector.holders.NullableUInt4Holder;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.FieldType;
+import org.apache.arrow.vector.util.CallBack;
 import org.junit.platform.commons.util.Preconditions;
 
 import java.util.ArrayList;
@@ -28,6 +32,7 @@ public class TestUtils {
     public static final String INT_LIST_VECTOR_NAME = "int list vector";
     public static final String BIGINT_INT_MAP_VECTOR_NAME = "bigint-int map vector";
     public static final String STRUCT_VECTOR_NAME = "struct_vector";
+    public static final String UNION_VECTOR_NAME = "union_vector";
 
     /**
      * Returns a list of two IntVectors to be used to instantiate Tables for testing.
@@ -198,5 +203,25 @@ public class TestUtils {
         }
         mapWriter.setValueCount(count);
         return mapVector;
+    }
+
+    /**
+     * Returns a UnionVector
+     */
+    static UnionVector simpleUnionVector(BufferAllocator allocator) {
+        final NullableUInt4Holder uInt4Holder = new NullableUInt4Holder();
+        uInt4Holder.value = 100;
+        uInt4Holder.isSet = 1;
+
+        UnionVector unionVector = new UnionVector(UNION_VECTOR_NAME, allocator, null, null);
+        unionVector.allocateNew();
+
+        // write some data
+        unionVector.setType(0, Types.MinorType.UINT4);
+        unionVector.setSafe(0, uInt4Holder);
+        unionVector.setType(2, Types.MinorType.UINT4);
+        unionVector.setSafe(2, uInt4Holder);
+        unionVector.setValueCount(4);
+        return unionVector;
     }
 }

@@ -6,6 +6,7 @@ import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.complex.ListVector;
 import org.apache.arrow.vector.complex.MapVector;
 import org.apache.arrow.vector.complex.StructVector;
+import org.apache.arrow.vector.complex.UnionVector;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
@@ -203,6 +204,24 @@ class CursorTest {
                 assertTrue(a >= 0);
                 assertTrue(b <= a, String.format("a = %s and b = %s", a, b));
             }
+        }
+    }
+
+    @Test
+    void testSimpleUnionVector() {
+        try (UnionVector unionVector = simpleUnionVector(allocator);
+             VectorSchemaRoot vsr = VectorSchemaRoot.of(unionVector);
+             Table table = new Table(vsr);
+        ) {
+            Cursor c = table.immutableCursor();
+            c.setPosition(0);
+            Object object0  = c.getUnion(UNION_VECTOR_NAME);
+            c.setPosition(1);
+            assertNull(c.getUnion(UNION_VECTOR_NAME));
+            c.setPosition(2);
+            Object object2  = c.getUnion(UNION_VECTOR_NAME);
+            assertEquals(100, object0);
+            assertEquals(100, object2);
         }
     }
 

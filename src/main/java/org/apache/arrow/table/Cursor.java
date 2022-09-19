@@ -5,6 +5,7 @@ import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.complex.ListVector;
 import org.apache.arrow.vector.complex.MapVector;
 import org.apache.arrow.vector.complex.StructVector;
+import org.apache.arrow.vector.complex.UnionVector;
 import org.apache.arrow.vector.holders.*;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 
@@ -69,7 +70,11 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
         return this;
     }
 
-    /** Returns true if the value at columnName is null, and false otherwise */
+    /**
+     * For vectors other than Union and DenseUnion, returns true if the value at columnName is null, and false otherwise
+     *
+     * UnionVector#isNull always returns false, but the underlying vector may hold null values
+     */
     public boolean isNull(String columnName) {
         ValueVector vector = table.getVector(columnName);
         return vector.isNull(rowNumber);
@@ -98,6 +103,16 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      */
     public Object getStruct(String columnName) {
         StructVector vector = (StructVector) table.getVector(columnName);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns an object from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public Object getUnion(String columnName) {
+        UnionVector vector = (UnionVector) table.getVector(columnName);
         return vector.getObject(rowNumber);
     }
 
