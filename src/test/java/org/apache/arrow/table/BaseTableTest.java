@@ -1,14 +1,12 @@
 package org.apache.arrow.table;
 
+import org.apache.arrow.algorithm.dictionary.HashTableDictionaryEncoder;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.VectorSchemaRoot;
-import org.apache.arrow.vector.types.pojo.ArrowType;
-import org.apache.arrow.vector.types.pojo.Field;
-import org.apache.arrow.vector.types.pojo.FieldType;
-import org.apache.arrow.vector.types.pojo.Schema;
+import org.apache.arrow.vector.*;
+import org.apache.arrow.vector.dictionary.DictionaryProvider;
+import org.apache.arrow.vector.dictionary.Dictionary;
+import org.apache.arrow.vector.types.pojo.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -199,5 +197,41 @@ class BaseTableTest {
             assertFalse(t.isRowDeleted(0));
             assertFalse(t.isRowDeleted(1));
         }
+    }
+
+    @Test
+    void testEncode() {
+        List<FieldVector> vectorList = intPlusVarcharColumns(allocator);
+        VarCharVector original = (VarCharVector) vectorList.get(1);
+        DictionaryProvider provider = getDictionary(original);
+        try (Table t = new Table(vectorList, vectorList.get(0).getValueCount(), provider)) {
+            IntVector v = (IntVector) t.encode(original.getName(), 1L);
+            assertNotNull(v);
+            assertEquals(0, v.get(0));
+            assertEquals(1, v.get(1));
+        }
+    }
+
+    private DictionaryProvider getDictionary(VarCharVector original) {
+
+        DictionaryProvider.MapDictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
+        DictionaryEncoding encoding = new DictionaryEncoding(1L, false, null);
+
+        VarCharVector dictionaryVector = new VarCharVector("dictionary", allocator);
+        dictionaryVector.allocateNew(2);
+        dictionaryVector.set(0, "one".getBytes());
+        dictionaryVector.set(1, "two".getBytes());
+        dictionaryVector.setValueCount(2);
+
+        HashTableDictionaryEncoder<IntVector, VarCharVector> encoder =
+                new HashTableDictionaryEncoder<>(dictionaryVector, false);
+
+        IntVector encodedVector = new IntVector("encoded vector", allocator);
+
+        encoder.encode(original, encodedVector);
+
+        Dictionary dictionary = new Dictionary(dictionaryVector, encoding);
+        provider.put(dictionary);
+        return provider;
     }
 }

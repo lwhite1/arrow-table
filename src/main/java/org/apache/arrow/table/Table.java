@@ -3,6 +3,7 @@ package org.apache.arrow.table;
 import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.util.TransferPair;
 
 import java.util.*;
@@ -50,7 +51,18 @@ public class Table extends BaseTable implements Iterable<Cursor> {
      * @param rowCount     The number of rows
      */
     public Table(List<FieldVector> fieldVectors, int rowCount) {
-        super(fieldVectors, rowCount);
+        super(fieldVectors, rowCount, null);
+    }
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param fieldVectors  The data vectors.
+     * @param rowCount      The number of rows
+     * @param provider      A dictionary provider. May be null if none of the vectors is dictionary encoded
+     */
+    public Table(List<FieldVector> fieldVectors, int rowCount, DictionaryProvider provider) {
+        super(fieldVectors, rowCount, provider);
     }
 
 /*

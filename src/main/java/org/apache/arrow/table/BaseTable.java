@@ -3,18 +3,18 @@ package org.apache.arrow.table;
 import org.apache.arrow.util.AutoCloseables;
 import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.complex.reader.FieldReader;
+import org.apache.arrow.vector.dictionary.Dictionary;
+import org.apache.arrow.vector.dictionary.DictionaryEncoder;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.TransferPair;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -42,11 +42,13 @@ public abstract class BaseTable implements AutoCloseable {
     /**
      * Constructs new instance with the given rowCount, and containing the schema and each of the given vectors.
      *
-     * @param fieldVectors the FieldVectors containing the table's data
-     * @param rowCount     the number of rows in the table
+     * @param fieldVectors  the FieldVectors containing the table's data
+     * @param rowCount      the number of rows in the table
+     * @param provider      a dictionary provider, may be null if none of the vectors in the table are encoded
      */
-    public BaseTable(List<FieldVector> fieldVectors, int rowCount) {
+    public BaseTable(List<FieldVector> fieldVectors, int rowCount, DictionaryProvider provider) {
 
+        this.dictionaryProvider = provider;
         this.rowCount = rowCount;
         this.fieldVectors = new ArrayList<>();
         List<Field> fields = new ArrayList<>();
@@ -313,5 +315,33 @@ public abstract class BaseTable implements AutoCloseable {
      */
     public DictionaryProvider getDictionaryProvider() {
         return dictionaryProvider;
+    }
+
+    public ValueVector decode(String vectorName, long dictionaryId) {
+        Dictionary dictionary = getDictionary(dictionaryId);
+
+        FieldVector vector = getVector(vectorName);
+        if (vector == null)
+            throw new IllegalArgumentException(String.format("No vector with name '%s' is present in table", vectorName));
+
+        DictionaryEncoder decoder = new DictionaryEncoder(dictionary, vector.getAllocator());
+        return decoder.decode(vector);
+    }
+
+    public ValueVector encode(String vectorName, long dictionaryId) {
+        Dictionary dictionary = getDictionary(dictionaryId);
+        FieldVector vector = getVector(vectorName);
+        if (vector == null)
+            throw new IllegalArgumentException(String.format("No vector with name '%s' is present in table", vectorName));
+        DictionaryEncoder decoder = new DictionaryEncoder(dictionary, vector.getAllocator());
+        return decoder.encode(vector);
+    }
+
+    private Dictionary getDictionary(long dictionaryId) {
+        if (dictionaryProvider == null) throw new IllegalStateException("No dictionary provider is present in table.");
+
+        Dictionary dictionary = dictionaryProvider.lookup(dictionaryId);
+        if (dictionary == null) throw new IllegalArgumentException("No dictionary with id '%n' exists in the table");
+        return dictionary;
     }
 }

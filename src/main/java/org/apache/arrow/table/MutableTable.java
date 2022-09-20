@@ -34,8 +34,6 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      */
     private final Set<Integer> deletedRows = new HashSet<>();
 
-    private DictionaryProvider dictionaryProvider;
-
     /**
      * Constructs new instance containing each of the given vectors.
      */
@@ -87,7 +85,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      * @param rowCount     The number of rows
      */
     public MutableTable(List<FieldVector> fieldVectors, int rowCount) {
-        super(fieldVectors, rowCount);
+        super(fieldVectors, rowCount, null);
     }
 
     /**
@@ -98,8 +96,7 @@ public class MutableTable extends BaseTable implements AutoCloseable, Iterable<M
      * @param dictionaryProvider    The dictionary provider containing the dictionaries for any encoded column
      */
     public MutableTable(List<FieldVector> fieldVectors, int rowCount, DictionaryProvider dictionaryProvider) {
-        super(fieldVectors, rowCount);
-        this.dictionaryProvider = dictionaryProvider;
+        super(fieldVectors, rowCount, dictionaryProvider);
     }
 
     /**

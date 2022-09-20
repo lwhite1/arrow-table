@@ -57,7 +57,21 @@ DictionaryProvider provider = myProvider();
 Table t = new Table(vsr, provider);
 ```
 
-How dictionaries are used is described below.
+In the immutable Table case, dictionaries are used in the typical fashion. To decode a vector, the user provides the dictionary id and the name of the vector to decode:
+
+```Java
+Table t = new Table(vsr, provider);
+ValueVector decodedName = t.decode("name", 1L);
+```
+
+To encode a vector from a table, a similar approach is used:
+
+```Java
+Table t = new Table(vsr, provider);
+ValueVector encodedName = t.encode("name", 1L);
+```
+
+
 
 ### Creating a Table from ValueVectors
 
