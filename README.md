@@ -57,7 +57,7 @@ DictionaryProvider provider = myProvider();
 Table t = new Table(vsr, provider);
 ```
 
-In the immutable Table case, dictionaries are used in the typical fashion. To decode a vector, the user provides the dictionary id and the name of the vector to decode:
+In the immutable Table case, dictionaries are used in a way that's similar to the approach used with ValueVectors. To decode a vector, the user provides the dictionary id and the name of the vector to decode:
 
 ```Java
 Table t = new Table(vsr, provider);
@@ -70,6 +70,31 @@ To encode a vector from a table, a similar approach is used:
 Table t = new Table(vsr, provider);
 ValueVector encodedName = t.encode("name", 1L);
 ```
+
+***TODO:*** One difference is the method that produces TSV formatted output has an extra switch instructing the Table to replace the encoded output with the decoded output where possible:
+
+```java
+String output = myTable.contentToTSVString(true);
+```
+
+##### Mutating Dictionary-encoded data
+
+***TODO:***
+
+```java
+MutableTable t = new MutableTable(vsr, WHAT GOES HERE?);
+MutableCursor mc = t.mutableCursor();
+mc.at(123);
+mc.setEncodedVarChar("name", "Fred", 1L); // Note: the identifier for the correct Dictionary is provided
+```
+
+Here's what is happening behind the scenes:
+
+- The DictionaryProvider is searched to see if there's a dictionary that has identifier 1L. 
+- The Table is searched for a vector called "name".
+- If no vector named "name" is found, or if no dictionary is found, an error is thrown.
+- If the dictionary contains an entry for "Fred" the corresponding value is inserted into the encoded vector in MutableTable *t*.
+- If the dictionary does not contain an entry for Fred one is added **(HOW?)** and the corresponding value is inserted in MutableTable *t*.
 
 
 
