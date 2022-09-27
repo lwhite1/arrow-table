@@ -4,7 +4,6 @@ import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.complex.*;
 import org.apache.arrow.vector.holders.*;
-import org.apache.arrow.vector.types.pojo.ArrowType;
 
 import java.math.BigDecimal;
 import java.nio.charset.Charset;

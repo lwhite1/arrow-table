@@ -84,7 +84,7 @@ String output = myTable.contentToTSVString(true);
 ```java
 MutableTable t = new MutableTable(vsr, WHAT GOES HERE?);
 MutableCursor mc = t.mutableCursor();
-mc.at(123);
+mc.setPosition(123);
 mc.setEncodedVarChar("name", "Fred", 1L); // Note: the identifier for the correct Dictionary is provided
 ```
 

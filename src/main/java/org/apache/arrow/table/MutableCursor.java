@@ -1,5 +1,6 @@
 package org.apache.arrow.table;
 
+import org.apache.arrow.flatbuf.Decimal;
 import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.dictionary.Dictionary;
@@ -64,9 +65,6 @@ public class MutableCursor extends Cursor {
      * Moves this MutableCursor to the given 0-based row index
      * Note: using setPosition() allows you to position the index at a deleted row,
      * while iterating skips the deleted rows.
-     * TODO: consider whether this is preferable to
-     *      (a) providing an iterator that includes deleted rows, or
-     *      (b) providing something like atAny() that includes deleted rows, while the standard at would skip
      *
      * @return this Cursor for method chaining
      **/
@@ -83,16 +81,7 @@ public class MutableCursor extends Cursor {
      */
     public MutableCursor setNull(String columnName) {
         FieldVector v = table.getVector(columnName);
-        // TODO: Real implementation (without casts) after fixing setNull issue
-        if (v instanceof NullVector) {
-            throw new IllegalArgumentException(
-                    String.format("Vector %s is of a type (%s) that does not support the method setNull()",
-                            columnName,
-                            v.getClass().getSimpleName()));
-        }
-        if (v instanceof IntVector) {
-            ((IntVector) v).setNull(getRowNumber());
-        }
+        v.setNull(getRowNumber());
         return this;
     }
 
@@ -104,16 +93,7 @@ public class MutableCursor extends Cursor {
      */
     public MutableCursor setNull(int columnIndex) {
         FieldVector v = table.getVector(columnIndex);
-        // TODO: Real implementation (without casts) after fixing setNull issue
-        if (v instanceof NullVector) {
-            throw new IllegalArgumentException(
-                    String.format("Vector %s is of a type (%s) that does not support the method setNull()",
-                            v.getName(),
-                            v.getClass().getSimpleName()));
-        }
-        if (v instanceof IntVector) {
-            ((IntVector) v).setNull(getRowNumber());
-        }
+        v.setNull(getRowNumber());
         return this;
     }
 
@@ -1855,8 +1835,6 @@ public class MutableCursor extends Cursor {
         VarCharVector v = (VarCharVector) table.getVector(columnIndex);
         Dictionary dictionary = dictionary(v);
         if (dictionary != null) {
-            ValueVector encodedVector = DictionaryEncoder.encode(v, dictionary);
-            ValueVector decodedVector = DictionaryEncoder.decode(v, dictionary);
             v.set(getRowNumber(), value.getBytes(getDefaultCharacterSet()));
             // TODO: Finish dictionary implementation
         } else {
@@ -2136,16 +2114,9 @@ public class MutableCursor extends Cursor {
     }
 
     /**
-     * Sets the value of the column with the given name at this MutableCursor to the given value. An
-     * IllegalStateException is thrown if the column is not present in the MutableCursor and an
-     * IllegalArgumentException is thrown if it has a different type to that named in the method
-     * signature
-     *
-     * @return this MutableCursor for chaining operations
      */
     public IntHolder getIntHolder(String columnName) {
-        IntHolder holder = (IntHolder) getHolder(columnName);
-        return holder;
+        return (IntHolder) getHolder(columnName);
     }
 
     /**
@@ -2202,26 +2173,63 @@ public class MutableCursor extends Cursor {
                throw new IllegalStateException(String.format("Column %s is not present in the table.", entry.getKey()));
             }
             Types.MinorType type = fv.getMinorType();
-
-            try {
-                switch (type) {
-                    // TODO: Handle the update for each remaining type
-                    case INT:
-                        IntVector intVector = (IntVector) fv;
-                        IntHolder intHolder = (IntHolder) holder;
-                        // TODO: Handle the actual update for IntVectors
-                        // intVector.setSafe(getRowNumber(), intHolder);
-                        // return this;
-                        throw new UnsupportedOperationException("Not yet implemented");
-                    default:
-                        throw new UnsupportedOperationException(buildErrorMessage("setAll", type));
-                }
-            } catch (ClassCastException cce) {
-                throw new IllegalArgumentException(
-                        String.format("Column %s has type %s, which does not match the provided ValueHolder",
-                                entry.getKey(), type));
-            }
+            return setValue(entry, fv, holder, type);
         }
         return this;
+    }
+
+    private MutableCursor setValue(Map.Entry<String, ValueHolder> entry, FieldVector fv, ValueHolder holder, Types.MinorType type) {
+        try {
+            switch (type) {
+                case TINYINT:
+                    ((TinyIntVector) fv).setSafe(getRowNumber(), (TinyIntHolder) holder);
+                    return this;
+                case SMALLINT:
+                    ((SmallIntVector) fv).setSafe(getRowNumber(), (SmallIntHolder) holder);
+                    return this;
+                case INT:
+                    ((IntVector) fv).setSafe(getRowNumber(), (IntHolder) holder);
+                    return this;
+                case BIGINT:
+                    ((BigIntVector) fv).setSafe(getRowNumber(), (BigIntHolder) holder);
+                    return this;
+                case UINT1:
+                    ((UInt1Vector) fv).setSafe(getRowNumber(), (UInt1Holder) holder);
+                    return this;
+                case UINT2:
+                    ((UInt2Vector) fv).setSafe(getRowNumber(), (UInt2Holder) holder);
+                    return this;
+                case UINT4:
+                    ((UInt4Vector) fv).setSafe(getRowNumber(), (UInt4Holder) holder);
+                    return this;
+                case UINT8:
+                    ((UInt8Vector) fv).setSafe(getRowNumber(), (UInt8Holder) holder);
+                    return this;
+                case FLOAT4:
+                    ((Float4Vector) fv).setSafe(getRowNumber(), (Float4Holder) holder);
+                    return this;
+                case FLOAT8:
+                    ((Float8Vector) fv).setSafe(getRowNumber(), (Float8Holder) holder);
+                    return this;
+                case DECIMAL:
+                    ((DecimalVector) fv).setSafe(getRowNumber(), (DecimalHolder) holder);
+                    return this;
+
+                    // TODO: Add remaining fixed-width types
+
+                case VARCHAR:
+                    ((VarCharVector) fv).setSafe(getRowNumber(), (VarCharHolder) holder);
+                    return this;
+
+                    // TODO: Add remaining variable-width types
+
+                default:
+                    throw new UnsupportedOperationException(buildErrorMessage("setAll", type));
+            }
+        } catch (ClassCastException cce) {
+            throw new IllegalArgumentException(
+                    String.format("Column %s has type %s, which does not match the provided ValueHolder",
+                            entry.getKey(), type));
+        }
     }
 }
