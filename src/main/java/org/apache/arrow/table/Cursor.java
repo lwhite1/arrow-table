@@ -21,6 +21,8 @@ import java.util.NoSuchElementException;
  * Getters are provided for most vector types. The exceptions being
  * - {@link NullVector}, which only contains null values and has no getter.
  * - {@link ZeroVector}, which is a zero-length vector of any type
+ *
+ * TODO: Handle ExtensionTypeVector in some fashion
  */
 public class Cursor extends BaseCursor implements Iterator<Cursor> {
 
@@ -1582,7 +1584,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
 
     // TODO: Implement getters for
     //   List & LargeList
-    //   Struct
     //   Map
     //   Union && DenseUnion
     //   plus (for dealing with nulls?)

@@ -1,10 +1,8 @@
 package org.apache.arrow.table;
 
-import org.apache.arrow.flatbuf.Decimal;
 import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.dictionary.Dictionary;
-import org.apache.arrow.vector.dictionary.DictionaryEncoder;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.holders.*;
 import org.apache.arrow.vector.types.Types;
@@ -2173,63 +2171,70 @@ public class MutableCursor extends Cursor {
                throw new IllegalStateException(String.format("Column %s is not present in the table.", entry.getKey()));
             }
             Types.MinorType type = fv.getMinorType();
-            return setValue(entry, fv, holder, type);
+            try {
+                return setValue(fv, holder, type);
+            } catch (ClassCastException cce) {
+                throw new IllegalArgumentException(
+                        String.format("Column %s has type %s, which does not match the provided ValueHolder",
+                                entry.getKey(), type));
+            }
         }
         return this;
     }
 
-    private MutableCursor setValue(Map.Entry<String, ValueHolder> entry, FieldVector fv, ValueHolder holder, Types.MinorType type) {
-        try {
-            switch (type) {
-                case TINYINT:
-                    ((TinyIntVector) fv).setSafe(getRowNumber(), (TinyIntHolder) holder);
-                    return this;
-                case SMALLINT:
-                    ((SmallIntVector) fv).setSafe(getRowNumber(), (SmallIntHolder) holder);
-                    return this;
-                case INT:
-                    ((IntVector) fv).setSafe(getRowNumber(), (IntHolder) holder);
-                    return this;
-                case BIGINT:
-                    ((BigIntVector) fv).setSafe(getRowNumber(), (BigIntHolder) holder);
-                    return this;
-                case UINT1:
-                    ((UInt1Vector) fv).setSafe(getRowNumber(), (UInt1Holder) holder);
-                    return this;
-                case UINT2:
-                    ((UInt2Vector) fv).setSafe(getRowNumber(), (UInt2Holder) holder);
-                    return this;
-                case UINT4:
-                    ((UInt4Vector) fv).setSafe(getRowNumber(), (UInt4Holder) holder);
-                    return this;
-                case UINT8:
-                    ((UInt8Vector) fv).setSafe(getRowNumber(), (UInt8Holder) holder);
-                    return this;
-                case FLOAT4:
-                    ((Float4Vector) fv).setSafe(getRowNumber(), (Float4Holder) holder);
-                    return this;
-                case FLOAT8:
-                    ((Float8Vector) fv).setSafe(getRowNumber(), (Float8Holder) holder);
-                    return this;
-                case DECIMAL:
-                    ((DecimalVector) fv).setSafe(getRowNumber(), (DecimalHolder) holder);
-                    return this;
+    /**
+     * Sets the value in holder in the given fieldVector
+     * @param fv
+     * @param holder
+     * @param type
+     * @return
+     */
+    private MutableCursor setValue(FieldVector fv, ValueHolder holder, Types.MinorType type) {
+        switch (type) {
+            case TINYINT:
+                ((TinyIntVector) fv).setSafe(getRowNumber(), (TinyIntHolder) holder);
+                return this;
+            case SMALLINT:
+                ((SmallIntVector) fv).setSafe(getRowNumber(), (SmallIntHolder) holder);
+                return this;
+            case INT:
+                ((IntVector) fv).setSafe(getRowNumber(), (IntHolder) holder);
+                return this;
+            case BIGINT:
+                ((BigIntVector) fv).setSafe(getRowNumber(), (BigIntHolder) holder);
+                return this;
+            case UINT1:
+                ((UInt1Vector) fv).setSafe(getRowNumber(), (UInt1Holder) holder);
+                return this;
+            case UINT2:
+                ((UInt2Vector) fv).setSafe(getRowNumber(), (UInt2Holder) holder);
+                return this;
+            case UINT4:
+                ((UInt4Vector) fv).setSafe(getRowNumber(), (UInt4Holder) holder);
+                return this;
+            case UINT8:
+                ((UInt8Vector) fv).setSafe(getRowNumber(), (UInt8Holder) holder);
+                return this;
+            case FLOAT4:
+                ((Float4Vector) fv).setSafe(getRowNumber(), (Float4Holder) holder);
+                return this;
+            case FLOAT8:
+                ((Float8Vector) fv).setSafe(getRowNumber(), (Float8Holder) holder);
+                return this;
+            case DECIMAL:
+                ((DecimalVector) fv).setSafe(getRowNumber(), (DecimalHolder) holder);
+                return this;
 
-                    // TODO: Add remaining fixed-width types
+                // TODO: Add remaining fixed-width types
 
-                case VARCHAR:
-                    ((VarCharVector) fv).setSafe(getRowNumber(), (VarCharHolder) holder);
-                    return this;
+            case VARCHAR:
+                ((VarCharVector) fv).setSafe(getRowNumber(), (VarCharHolder) holder);
+                return this;
 
-                    // TODO: Add remaining variable-width types
+                // TODO: Add remaining variable-width types
 
-                default:
-                    throw new UnsupportedOperationException(buildErrorMessage("setAll", type));
-            }
-        } catch (ClassCastException cce) {
-            throw new IllegalArgumentException(
-                    String.format("Column %s has type %s, which does not match the provided ValueHolder",
-                            entry.getKey(), type));
+            default:
+                throw new UnsupportedOperationException(buildErrorMessage("setAll", type));
         }
     }
 }

@@ -2,7 +2,7 @@
 
 **NOTE**: This API is experimental and subject to change.
 
-Like VectorSchemaRoot, *Table* and *MutableTable* are tabular data structures backed by Arrow arrays. They differ from VectorSchemaRoot mainly in that they lack its support for batch operations. Anyone processing batches of tabular data in a pipeline should continue to use VectorSchemaRoot. Table and MutableTable also differ from VectorSchemaRoot in their mutation semantics.
+Like VectorSchemaRoot, *Table* and *MutableTable* are tabular data structures backed by Arrow FieldVectors. They differ from VectorSchemaRoot mainly in that they lack its support for batch operations. Anyone processing batches of tabular data in a pipeline should continue to use VectorSchemaRoot. Table and MutableTable also differ from VectorSchemaRoot in their mutation semantics.
 
 ## Mutation in tables and VectorSchemaRoot
 
