@@ -18,7 +18,7 @@ VectorSchemaRoot provides a thin wrapper on the FieldVectors that hold its data.
 - you must call setValueCount before a vector can be read
 - you should never write to a vector once it has been read.
 
-The rules aren't enforced by the API so the programmer is responsible for ensuring they're followed. Failure to do so could lead to runtime exceptions. 
+The rules aren't enforced by the API so the programmer is responsible for ensuring that they are followed. Failure to do so could lead to runtime exceptions. 
 
 _Table_, on the other hand, is actually immutable. The underlying vectors are not exposed. When a Table is created from existing vectors, their memory is transferred to new vectors, so subsequent changes to the original vectors can't impact the new table's values.
 
@@ -39,7 +39,7 @@ Table t = new Table(vsr);
 
 If you now update the FieldVectors used to create the VectorSchemaRoot (using some variation of  `ValueVector#setSafe()`), the VectorSchemaRoot *vsr* would reflect those changes, but the values in Table *t* are unchanged. 
 
-***Current Limitation:*** Due to an unresolved limitation in `CDataReferenceManager`, you cannot currently create a Table from a VectorSchemRoot that was created in native code and transferred to Java via the C-Data Interfacee.  
+***Current Limitation:*** Due to an unresolved limitation in `CDataReferenceManager`, you cannot currently create a Table from a VectorSchemaRoot that was created in native code and transferred to Java via the C-Data Interface.  
 
 ### Creating a Table from ValueVectors
 
@@ -70,7 +70,7 @@ VectorSchemaRoot vsr2 = new VectorSchemaRoot(myVector);
 vsr2.clear(); // Reference count for myVector is 0.
 ```
 
-What is happening is that the reference counter works at a lower level than the VectorSchemaRoot interface. A reference counter counts references to ArrowBuf instances that control memory buffers. It doesn't count references to the ValueVectors that hold *them*. In the examaple above, each ArrowBuf is held by one ValueVector, so there is only one reference. This distinction is blurred though, when you call the VectorSchemaRoot's clear() method, which frees the memory held by each of the vectors it references even though another instance might refer to the same vectors. 
+What is happening is that the reference counter works at a lower level than the VectorSchemaRoot interface. A reference counter counts references to ArrowBuf instances that control memory buffers. It doesn't count references to the ValueVectors that hold *them*. In the example above, each ArrowBuf is held by one ValueVector, so there is only one reference. This distinction is blurred though, when you call the VectorSchemaRoot's clear() method, which frees the memory held by each of the vectors it references even though another instance might refer to the same vectors. 
 
 When you create Tables from vectors, it's assumed that there are no external references to those vectors. But, just to be on the safe side, the buffers underlying these vectors are transferred to new ValueVectors in the new Table, and the original vectors are cleared.  
 
@@ -125,7 +125,7 @@ Tables use off-heap memory that must be freed when it is no longer needed. Table
 
 ```java
 try (VectorSchemaRoot vsr = myMethodForGettingVsrs(); 
-		 MutableTable t = new MutableTable(vsr)) {
+		 Table t = new Table(vsr)) {
 		 // do useful things.
 }
 ```
@@ -135,7 +135,7 @@ If you don't use a try-with-resources block, you must close the Table manually:
 ````java
 try {
   VectorSchemaRoot vsr = myMethodForGettingVsrs(); 
-  MutableTable t = new MutableTable(vsr);
+  Table t = new Table(vsr);
   // do useful things.
 } finally {
   vsr.close();
@@ -145,9 +145,17 @@ try {
 
 Manually closing should be performed in a finally block.
 
+## Table API: getting the schema
+
+You get the table's schema the same way you do with a VectorSchemaRoot:
+
+```java
+Schema s = table.getSchema(); 
+```
+
 ## Table API: Adding and removing vectors
 
-Both Table and MutableTable provide facilities for adding and removing FieldVectors modeled on the same functionality in VectorSchemaRoot. As with VectorSchemaRoot. These operations return new instances rather than modifiying the original instance in-place.
+Table provides facilities for adding and removing FieldVectors modeled on the same functionality in VectorSchemaRoot. As with VectorSchemaRoot, these operations return new instances rather than modifiying the original instance in-place.
 
 ```java
 try (Table t = new Table(vectorList)) {
@@ -198,7 +206,7 @@ Cursor c = table.immutableCursor();
 
 ### Getting around
 
-Since cursors are itearble, you can traverse a table using a standard while loop:
+Since cursors are iterable, you can traverse a table using a standard while loop:
 
 ```java
 Cursor c = table.immutableCursor(); 
@@ -267,6 +275,8 @@ long ts = cursor.getTimeStampMicro();
 LocalDateTime tsObject = cursor.getTimeStampMicroObj();
 ```
 
+The exception to this naming scheme is for complex vector types (List, Map, Schema, Union, DenseUnion, and ExtensionType). These always return objects rather than primitives so no "Obj" extension is required.  It is expected that some users may subclass Cursor to add getters that are more specific to their needs. 
+
 #### Reading VarChars and LargeVarChars
 
 Strings in arrow are represented as byte arrays, encoded with a particular Charset object. There are two ways to handle Charset in the getters. One uses the default Charset; the other takes a charset as an argument to the getter:
@@ -305,12 +315,22 @@ Buffers are transferred to the VectorSchemaRoot and the Table is cleared.
 
 ## Table API: Working with the Streaming API and the C-Data interface
 
-The ability to work with native code is required for many Arrow features. This section describes how tables can be be exported and imported using two mechanisms.
+The ability to work with native code is required for many Arrow features. This section describes how tables can be be exported and imported using two mechanisms: the C-Data Interface and the Streaming API. 
+
+In both cases, the current solution works by converting the data to a VectorSchemaRoot and using the existing facilities for transferring the data. This is not ideal because conversion to a VectorSchemaRoot breaks the immutability guarantees, arguably when they're most desirable.  
 
 ### Using the Streaming API with Tables
 
 ***Current limitation: Streaming API is not currently supported.***
 
+Ideally, it would be possible to load a construct a table directly from an ArrowStreamReader, but this is not currently supported. 
+
 ### Using the C-Data interface with Tables
 
-***Current limitation: Data transferred from native code using the C-Data-interface cannot be used in a table, because the current implementation of CdataReferenceManager does not support the transfer operation.*** 
+***Current limitation: Data transferred from native code using the C-Data-interface cannot be used in a table, because the current implementation of CDataReferenceManager does not support the transfer operation.*** 
+
+Data can be transferred from a Table to native code as follows:
+
+```java
+```
+

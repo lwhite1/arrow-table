@@ -21,8 +21,6 @@ import java.util.NoSuchElementException;
  * Getters are provided for most vector types. The exceptions being
  * - {@link NullVector}, which only contains null values and has no getter.
  * - {@link ZeroVector}, which is a zero-length vector of any type
- *
- * TODO: Handle ExtensionTypeVector in some fashion
  */
 public class Cursor extends BaseCursor implements Iterator<Cursor> {
 
@@ -85,6 +83,39 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
+     * Returns an object representing the value in the named ExtensionTypeVector at the currentRow.
+     * An IllegalStateException is thrown if the column is not present in the MutableCursor and
+     * an IllegalArgumentException is thrown if the type is incorrect
+     */
+    public Object getExtensionType(int vectorIndex) {
+        ExtensionTypeVector<?> vector = (ExtensionTypeVector<?>) table.getVector(vectorIndex);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns an object representing the value in the ExtensionTypeVector at the currentRow. An IllegalStateException
+     * is thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     *
+     * @param columnName    The name of the vector providing the result
+     * @return              The object in the named column at the current row
+     */
+    public Object getExtensionType(String columnName) {
+        ExtensionTypeVector<?> vector = (ExtensionTypeVector<?>) table.getVector(columnName);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns a Map from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public List<?> getMap(int vectorIndex) {
+        ListVector vector = (ListVector) table.getVector(vectorIndex);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
      * Returns a Map from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
      * has a different type
@@ -95,12 +126,32 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
-     * Returns a Struct from the column of the given name at the current row. An IllegalStateException is
+     * Returns an Object from the column of the given name at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public Object getStruct(int vectorIndex) {
+        StructVector vector = (StructVector) table.getVector(vectorIndex);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns an Object from the column of the given name at the current row. An IllegalStateException is
      * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
      * has a different type
      */
     public Object getStruct(String columnName) {
         StructVector vector = (StructVector) table.getVector(columnName);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns a List from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public Object getUnion(int vectorIndex) {
+        UnionVector vector = (UnionVector) table.getVector(vectorIndex);
         return vector.getObject(rowNumber);
     }
 
@@ -121,6 +172,16 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
      */
     public Object getDenseUnion(String columnName) {
         DenseUnionVector vector = (DenseUnionVector) table.getVector(columnName);
+        return vector.getObject(rowNumber);
+    }
+
+    /**
+     * Returns a List from the column with the given index at the current row. An IllegalStateException is
+     * thrown if the column is not present in the MutableCursor and an IllegalArgumentException is thrown if it
+     * has a different type
+     */
+    public Object getDenseUnion(int vectorIndex) {
+        DenseUnionVector vector = (DenseUnionVector) table.getVector(vectorIndex);
         return vector.getObject(rowNumber);
     }
 
@@ -1629,9 +1690,6 @@ public class Cursor extends BaseCursor implements Iterator<Cursor> {
     }
 
     /**
-     * TODO: When used with an Table there would be no deleted rows, so this method could be used, but
-     *   the deletion support is needed when it's needed as an immutable iterator for MutableTable.
-     *
      * Returns new internal iterator that processes every row, deleted or not.
      * Users should use the wrapping next() and hasNext() methods rather than using this iterator directly,
      * unless you want to see any deleted rows.
